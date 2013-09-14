@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html ng-app="payroll">
+<head>
+    <title>Payroll</title>
+    <script src="js/jquery-1.9.1.js"></script>
+    <script src="js/angular.js"></script>
+    <script src="js/ui-bootstrap-tpls-0.5.0.js"></script>
+    <script src="js/ng-grid-2.0.7.min.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/employee-list.js"></script>
+    <script src="js/social-security-controller.js"></script>
+    <script src="js/social-security-repository.js"></script>
+    <script src="js/general-setup-controller.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/payroll.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
+    <link type="text/css" rel="stylesheet" href="css/payroll.css"/>
+
+</head>
+<body ng-controller="PayrollController">
+    <nav class="navbar navbar-inverse" role="navigation">
+        <div class="navbar-inner">
+            <a class="brand" href="#">Payroll</a>
+            <ul class="nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Setup <b class="caret"></b></a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+                        <li><a tabindex="-1" href="#" ng-click="showGeneralSetup()">General Setup</a></li>
+                        <li><a tabindex="-1" href="#" ng-click="showSocialSecurity()">Social Security</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tables <b class="caret"></b></a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+                        <li><a tabindex="-1" href="#">Employees</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports <b class="caret"></b></a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+                        <li><a tabindex="-1" href="#">Employee Records</a></li>
+                        <li class="divider"></li>
+                        <li><a tabindex="-1" href="#">Pay Stubs</a></li>
+                        <li><a tabindex="-1" href="#">Payroll Summary</a></li>
+                        <li class="divider"></li>
+                        <li><a tabindex="-1" href="#">Monthly Summary</a></li>
+                        <li><a tabindex="-1" href="#">Yearly Summary</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row form-horizontal">
+            <span class="span4" ng-controller="CalendarController">
+                <label>Week Ending</label>
+                <input type="text" datepicker-popup="dd-MMMM-yyyy" ng-model="calendarDate" open="showDatePicker" options="dateOptions" ng-required="true"/>
+                <button class="btn" ng-click="showCalendar()"><i class="icon-calendar"></i></button>
+            </span>
+            <span class="span4">
+                <label>Paydays For The Month</label>
+                <span class="uneditable-input input-mini">{{ application.payDays }}</span>
+            </span>
+            <span class="span3">
+                <label>Holidays</label>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.sun" btn-checkbox>S</button>
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.mon" btn-checkbox>M</button>
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.tue" btn-checkbox>T</button>
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.wed" btn-checkbox>W</button>
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.thu" btn-checkbox>T</button>
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.fri" btn-checkbox>F</button>
+                    <button type="button" class="btn btn-primary" ng-model="application.holidays.sat" btn-checkbox>S</button>
+                </div>
+            </span>
+        </div>
+    </div>
+    <br/>
+    <br/>
+    <div class="container">
+        <div class="row">
+            <div class="span3" ng-controller="EmployeeListController">
+                <ul class="nav nav-tabs nav-stacked">
+                    <li ng-repeat="employee in employees | orderBy: name">
+                        <a href="#"><i class="icon-chevron-right"></i> {{ employee.name }}</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="span9">
+                <tabset>
+                    <tab heading="Timesheet">
+                        <div>
+                            <div class="form-horizontal">
+                                <div class="span3">
+                                    <div class="control-group">
+                                        <label class="control-label" for="inputSickDays">Sick Days</label>
+                                        <div class="controls">
+                                            <input type="text" class="span1" id="inputSickDays"/>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label class="control-label" for="inputVacationDays">Vacation</label>
+                                        <div class="controls">
+                                            <input type="text" class="span1" id="inputVacationDays"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="span3">
+                                    <div class="control-group">
+                                        <label class="control-label" for="inputCommission">Commission</label>
+                                        <div class="controls">
+                                            <input type="text" class="input-small" id="inputCommission"/>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label class="control-label" for="inputCashAdvance">Cash Advance</label>
+                                        <div class="controls">
+                                            <input type="text" class="input-small" id="inputCashAdvance"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <td colspan="2">&#160;</td>
+                                        <td width="12%">Sun</td><td>Mon</td><td>Tue</td><td>Wed</td><td>Thu</td><td>Fri</td><td>Sat</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td rowspan="2" class="td-centered vertical-middle">AM</td>
+                                    <td class="vertical-middle">In</td>
+                                    <td rowspan="2" class="vertical-middle"><input type="checkbox"></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                </tr>
+                                <tr>
+
+                                    <td class="vertical-middle">Out</td>
+
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2">PM</td>
+                                    <td class="vertical-middle">In</td>
+                                    <td rowspan="2" class="vertical-middle"><input type="checkbox"></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                </tr>
+                                <tr>
+
+                                    <td>Out</td>
+
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2"> </td>
+                                    <td>In</td>
+                                    <td rowspan="2"><input type="checkbox"></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                </tr>
+                                <tr>
+
+                                    <td>Out</td>
+
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                    <td><input type="text" class="span1"/></td>
+                                </tr>
+                                </tbody>
+                                <tfoot></tfoot>
+                            </table>
+                        </div>
+                    </tab>
+                    <tab heading="Pay Stub">
+                        <div>
+
+                        </div>
+                    </tab>
+                </tabset>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
