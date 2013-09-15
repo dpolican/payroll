@@ -7,9 +7,7 @@
  */
 function SocialSecurityRepository(DataService, $q) {
 
-    var socialSecurityRecords = [
-        { bracket: 1, salary: 1000, credit: 1000, employerSS: 50.7, employerEC: 10, employeeSS: 33.30 },
-        { bracket: 2, salary: 1250, credit: 1500, employerSS: 76.0, employerEC: 10, employeeSS: 50.00 } ];
+    var socialSecurityRecords = [];
 
     var getAll = function() {
         var errorOccurred = false;
@@ -32,9 +30,9 @@ function SocialSecurityRepository(DataService, $q) {
                         record.bracket = row.bracket;
                         record.salary = row.salary;
                         record.credit = row.credit;
-                        record.employerSS = row.employerSS;
-                        record.employerEC = row.employerEC;
-                        record.employeeSS = row.employeeSS;
+                        record.employerSS = row.employerss;
+                        record.employerEC = row.employerec;
+                        record.employeeSS = row.employeess;
                         records.push(record);
                     }
 
@@ -47,8 +45,9 @@ function SocialSecurityRepository(DataService, $q) {
         return delay.promise;
     };
 
+
     var saveAll = function(updatedRecords) {
-        var recordsToSave = angular.copy(updatedRecords);
+        var recordsToSave = updatedRecords;
         var newRecords = [];
         var ids = [];
 
@@ -69,15 +68,18 @@ function SocialSecurityRepository(DataService, $q) {
                 if (recordToSave.bracket == socialSecurityRecord.bracket) {
                     existingRecord = true;
                     if (!angular.equals(recordToSave, socialSecurityRecord)) {
-                        DataService.exec(function(transaction) {
-                            transaction.executeSql(
-                                "update socialsecurity set salary = ?, credit = ?, employerSS = ?, employerEC = ?, employeeSS = ? where bracket = ?;",
-                                [recordToSave.salary, recordToSave.credit, recordToSave.employerSS,
-                                    recordToSave.employerEC, recordToSave.employeeSS, recordToSave.bracket],
-                                function() {},
-                                errorHandler
-                            );
-                        });
+                        var updateFunction = function(recordToSave) {
+                            return function(transaction) {
+                                transaction.executeSql(
+                                    "update socialsecurity set salary = ?, credit = ?, employerss = ?, employerec = ?, employeess = ? where bracket = ?;",
+                                    [recordToSave.salary, recordToSave.credit, recordToSave.employerSS, recordToSave.employerEC, recordToSave.employeeSS, recordToSave.bracket],
+                                    function() {  },
+                                    errorHandler
+                                );
+                            }
+                        };
+
+                        DataService.exec(updateFunction(recordToSave));
                     }
                     break;
                 }
@@ -88,27 +90,33 @@ function SocialSecurityRepository(DataService, $q) {
         };
 
         angular.forEach(newRecords, function(newRecord, index) {
-            DataService.exec(function(transaction) {
-                transaction.executeSql(
-                    "insert into socialsecurity (bracket, salary, credit, employerSS, employerEC, employeeSS) values(?, ?, ?, ?, ?, ?);",
-                    [recordToSave.bracket, recordToSave.salary, recordToSave.credit, recordToSave.employerSS,
-                        recordToSave.employerEC, recordToSave.employeeSS],
-                    function() {},
-                    errorHandler
-                );
-            });
+            var insertFunction = function(newRecord) {
+                return function(transaction) {
+                    transaction.executeSql(
+                        "insert into socialsecurity (bracket, salary, credit, employerss, employerec, employeess) values(?, ?, ?, ?, ?, ?);",
+                        [newRecord.bracket, newRecord.salary, newRecord.credit, newRecord.employerSS, newRecord.employerEC, newRecord.employeeSS],
+                        function() {},
+                        errorHandler
+                    )
+                }
+            };
+
+            DataService.exec(insertFunction(newRecord));
         });
 
         angular.forEach(socialSecurityRecords, function(socialSecurityRecord, index) {
             if (ids.indexOf(socialSecurityRecord.bracket) < 0) {
-                DataService.exec(function(transaction) {
-                    transaction.executeSql(
-                        "delete from socialsecurity where bracket = ?;",
-                        [socialSecurityRecord.bracket],
-                        function() {},
-                        errorHandler
-                    );
-                });
+                var deleteFunction = function(socialSecurityRecord) {
+                    return function(transaction) {
+                        transaction.executeSql(
+                            "delete from socialsecurity where bracket = ?;",
+                            [socialSecurityRecord.bracket],
+                            function() {},
+                            errorHandler
+                        );
+                    }
+                };
+                DataService.exec(deleteFunction(socialSecurityRecord));
             }
         });
 

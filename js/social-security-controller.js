@@ -5,16 +5,16 @@
  * Time: 6:45 AM
  * To change this template use File | Settings | File Templates.
  */
-function SocialSecurityController($scope, dialog, SocialSecurityRepository, records) {
+function SocialSecurityController($scope, dialog, SocialSecurityRepository) {
 
-    $scope.records = records;
+    $scope.records = [];
 
     $scope.gridOptions = {
         data: 'records',
         enableCellEditOnFocus: true,
         enableCellSelection: true,
+        enableRowSelection: false,
         enableSorting: false,
-//        sortInfo : { fields: ['bracket'], directions: ['asc'] },
         columnDefs: [
             {field:'bracket', displayName:'Bracket', cellFilter: 'number', width: 68, enableCellEdit: false },
             {field:'salary', displayName:'Salary', cellFilter: 'currency'},
@@ -24,6 +24,14 @@ function SocialSecurityController($scope, dialog, SocialSecurityRepository, reco
             {field:'employeeSS', displayName:'Employee SS', cellFilter: 'currency'}
         ]
     };
+
+    SocialSecurityRepository.getAll()
+        .then(function(result){
+            $scope.records = result;
+            if (!$scope.$$phase) {
+                $scope.$apply();
+            }
+        }, function() { alert("Error loading Social Security records.")});
 
     $scope.saveSSS = function() {
         SocialSecurityRepository.saveAll($scope.records);
