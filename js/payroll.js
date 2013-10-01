@@ -5,73 +5,26 @@
  * Time: 6:24 PM
  * To change this template use File | Settings | File Templates.
  */
+var PayrollConstants = {
+    weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    paySchedule: ['Weekly']
+};
+
 var payrollModule = angular.module('payroll', ['ui.bootstrap', 'ngGrid']);
 
-payrollModule.controller('PayrollController',function($scope, $dialog) {
+payrollModule.controller('PayrollController',function($scope, $dialog, DataService) {
     $scope.application = {
         payDays: 4,
         holidays: { sun: false, mon: false, tue: false, wed: false, thu: false, fri: false, sat: false }
     };
 
-    var generalSetupTemplate = '<div>'
-        + '<div class="modal-header"><h3>Setup</h3></div>'
-        + '<div class="modal-body"><form class="form-horizontal"> '
-        + ' <div class="control-group"><label class="control-label">Week Ending</label><div class="controls"><input type="text" name="weekending"/></div></div>'
-        + ' <fieldset><legend>Work Schedule</legend>'
-        + ' <div class="span3">'
-        + '  <div class="control-group">'
-        + '     <label class="control-label" for="inputAMIn">AM In</label>'
-        + '     <div class="controls">'
-        + '         <input type="text" class="input-mini" id="inputAMIn"/>'
-        + '     </div>'
-        + '  </div>'
-        + '  <div class="control-group">'
-        + '   <label class="control-label" for="inputAMOut">AM Out</label>'
-        + '   <div class="controls">'
-        + '    <input type="text" class="input-mini" id="inputAMOut"/>'
-        + '   </div>'
-        + '  </div>'
-        + ' </div>'
-        + ' <div class="span3">'
-        + '  <div class="control-group">'
-        + '     <label class="control-label" for="inputPMIn">PM In</label>'
-        + '     <div class="controls">'
-        + '         <input type="text" class="input-mini" id="inputPMIn"/>'
-        + '     </div>'
-        + '  </div>'
-        + '  <div class="control-group">'
-        + '   <label class="control-label" for="inputPMOut">Pm Out</label>'
-        + '   <div class="controls">'
-        + '    <input type="text" class="input-mini" id="inputPMOut"/>'
-        + '   </div>'
-        + '  </div>'
-        + ' </div>'
-
-
-        + '  <div class="control-group"><label class="control-label">Regular Hours</label><div class="controls"><input type="text" name="weekending" class="input-mini"/></div></div>'
-        + ' </fieldset>'
-        + ' <fieldset><legend>Employee Benefits</legend>'
-        + '  <div class="control-group"><label class="control-label" >Pay Schedule</label><div class="controls"><input type="text" name="weekending"/></div></div>'
-        + '  <div class="control-group"><label class="control-label">Incentive Pay</label><div class="controls"><input type="text" name="weekending" class="input-small"/></div></div>'
-        + '  <div class="control-group"><label class="control-label" >Sunday Incentive</label><div class="controls"><input type="text" name="weekending" class="input-small"/></div></div>'
-        + '  <div class="control-group"><label class="control-label">Overtime Factor</label><div class="controls"><input type="text" name="weekending" class="input-mini"/></div></div>'
-        + '  <div class="control-group"><label class="control-label">Legal Holiday Factor</label><div class="controls"><input type="text" name="weekending" class="input-mini"/></div></div>'
-        + '  <div class="control-group"><label class="control-label">Special Holiday Factor</label><div class="controls"><input type="text" name="weekending" class="input-mini"/></div></div>'
-        + '  <div class="control-group"><label class="control-label">Sick Days</label><div class="controls"><input type="text" name="weekending" class="input-mini"/></div></div>'
-        + '  <div class="control-group"><label class="control-label">Vacation Days</label><div class="controls"><input type="text" name="weekending" class="input-mini"/></div></div>'
-        + ' </fieldset>'
-        + '</form></div>'
-        + '<div class="modal-footer">'
-        + '<button class="btn btn-success" ng-click="saveSetup()">Done</button>'
-        + '<button class="btn btn-warning" ng-click="cancelSetup()">Cancel</button>'
-        + '</div>'
-        + '</div>';
+    DataService.init();
 
     $scope.generalSetupDialogOptions = {
         backdrop: true,
         keyboard: true,
         backdropClick: false,
-        template: generalSetupTemplate,
+        templateUrl: 'general-setup.html',
         controller: 'GeneralSetupController'
     };
 
@@ -80,24 +33,12 @@ payrollModule.controller('PayrollController',function($scope, $dialog) {
         d.open();
     };
 
-    var socialSecurityDialogTemplate = '<div>'
-        + '<div class="modal-header"><h3>Social Security</h3></div>'
-        + '<div class="modal-body"><div class="gridStyle" ng-grid="gridOptions"></div></div>'
-        + '<div class="modal-footer">'
-        + ' <div class="pull-left">'
-        + '  <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>'
-        + '  <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>'
-        + ' </div>'
-        + '  <button class="offset1 btn btn-success" ng-click="saveSSS()">Save</button>'
-        + '  <button class="btn btn-warning" ng-click="cancelSSS()">Cancel</button>'
-        + '</div></div>';
-
     $scope.socialSecurityDialogOptions = {
         backdrop: true,
         keyboard: true,
         backdropClick: false,
         dialogClass: 'modal ss-dialog',
-        template: socialSecurityDialogTemplate,
+        templateUrl: 'social-security.html',
         controller: 'SocialSecurityController'
     };
 
@@ -106,16 +47,80 @@ payrollModule.controller('PayrollController',function($scope, $dialog) {
         d.open();
     }
 
+    $scope.withholdingTypesDialogOptions = {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: false,
+        dialogClass: 'modal wht-dialog',
+        templateUrl: 'withholding-types.html',
+        controller: 'WithholdingTypesController'
+    };
 
+    $scope.showWithholdingTypes = function() {
+        var d = $dialog.dialog($scope.withholdingTypesDialogOptions);
+        d.open();
+    }
+
+    $scope.medicareDialogOptions = {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: false,
+        dialogClass: 'modal medicare-dialog',
+        templateUrl: 'medicare.html',
+        controller: 'MedicareController'
+    };
+
+    $scope.showMedicare = function() {
+        var d = $dialog.dialog($scope.medicareDialogOptions);
+        d.open();
+    }
+
+    $scope.withholdingDialogOptions = {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: false,
+        dialogClass: 'modal withholding-dialog',
+        templateUrl: 'withholding.html',
+        controller: 'WithholdingController'
+    };
+
+    $scope.showWithholding = function() {
+        var d = $dialog.dialog($scope.withholdingDialogOptions);
+        d.open();
+    }
+
+    $scope.storeDialogOptions = {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: false,
+        dialogClass: 'modal ss-dialog',
+        templateUrl: 'store.html',
+        controller: 'StoreController'
+    };
+
+    $scope.showStores = function() {
+        var d = $dialog.dialog($scope.storeDialogOptions);
+        d.open();
+    };
 });
 
 payrollModule.factory('DataService', DataService);
 
+payrollModule.factory('GeneralSetupRepository', GeneralSetupRepository);
 payrollModule.factory('SocialSecurityRepository', SocialSecurityRepository);
+payrollModule.factory('StoreRepository', StoreRepository);
+payrollModule.factory('WithholdingTypesRepository', WithholdingTypesRepository);
+payrollModule.factory('MedicareRepository', MedicareRepository);
 
 payrollModule.controller('CalendarController', CalendarController);
-payrollModule.controller('SocialSecurityController', SocialSecurityController);
-payrollModule.controller('EmployeeListController', EmployeeListController);
 payrollModule.controller('GeneralSetupController', GeneralSetupController);
+payrollModule.controller('SocialSecurityController', SocialSecurityController);
+payrollModule.controller('StoreController', StoreController);
+payrollModule.controller('WithholdingTypesController', WithholdingTypesController);
+payrollModule.controller('MedicareController', MedicareController);
+
+payrollModule.controller('EmployeeListController', EmployeeListController);
+
+
 
 

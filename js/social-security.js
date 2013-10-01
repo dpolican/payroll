@@ -2,10 +2,72 @@
  * Created with JetBrains WebStorm.
  * User: ewkoenw
  * Date: 9/5/13
- * Time: 6:53 AM
+ * Time: 6:45 AM
  * To change this template use File | Settings | File Templates.
  */
-function SocialSecurityRepository(DataService, $q) {
+function SocialSecurityController($scope, dialog, SocialSecurityRepository) {
+
+    $scope.records = [];
+
+    $scope.gridOptions = {
+        data: 'records',
+        enableCellEditOnFocus: true,
+        enableCellSelection: true,
+        enableRowSelection: false,
+        enableSorting: false,
+        columnDefs: [
+            {field:'bracket', displayName:'Bracket', cellFilter: 'number', width: 68, enableCellEdit: false },
+            {field:'salary', displayName:'Salary', cellFilter: 'currency'},
+            {field:'credit', displayName:'Credit', cellFilter: 'currency'},
+            {field:'employerSS', displayName:'Employer SS', cellFilter: 'currency'},
+            {field:'employerEC', displayName:'Employer EC', cellFilter: 'currency'},
+            {field:'employeeSS', displayName:'Employee SS', cellFilter: 'currency'}
+        ]
+    };
+
+    SocialSecurityRepository.getAll()
+        .then(function(result){
+            $scope.records = result;
+        }, function() { alert("Error loading Social Security records.")});
+
+    $scope.saveSSS = function() {
+        SocialSecurityRepository.saveAll($scope.records);
+        dialog.close();
+    };
+
+    $scope.cancelSSS = function () {
+        dialog.close();
+    };
+
+    $scope.addRow = function() {
+        var newrecord = SocialSecurityRepository.newRecord();
+        newrecord.bracket = $scope.determineNextBracket();
+       $scope.records.push(newrecord);
+    };
+
+    $scope.deleteRow = function() {
+        var rows = $scope.records.length;
+        if (rows > 0) {
+            $scope.records.splice(rows - 1, 1);
+        }
+    }
+
+    $scope.determineNextBracket = function () {
+        var max = 0;
+
+        for (var i = 0; i < $scope.records.length; i++)
+        {
+            if (max < $scope.records[i].bracket)
+            {
+                max = $scope.records[i].bracket;
+            }
+        }
+
+        return 1 + max;
+    };
+};
+
+function SocialSecurityRepository(DataService, $q, $rootScope) {
 
     var socialSecurityRecords = [];
 
@@ -22,7 +84,7 @@ function SocialSecurityRepository(DataService, $q) {
 
         DataService.exec(function (transaction) {
             transaction.executeSql(
-                "SELECT * from socialsecurity order by bracket;", [], function (transaction, result) {
+                "SELECT * from social_security order by bracket;", [], function (transaction, result) {
                     var records = [];
                     for (var i = 0; i < result.rows.length; i++) {
                         var row = result.rows.item(i);
@@ -30,14 +92,15 @@ function SocialSecurityRepository(DataService, $q) {
                         record.bracket = row.bracket;
                         record.salary = row.salary;
                         record.credit = row.credit;
-                        record.employerSS = row.employerss;
-                        record.employerEC = row.employerec;
-                        record.employeeSS = row.employeess;
+                        record.employerSS = row.employer_ss;
+                        record.employerEC = row.employer_ec;
+                        record.employeeSS = row.employee_ss;
                         records.push(record);
                     }
 
                     socialSecurityRecords = angular.copy(records);
                     delay.resolve(records);
+                    $rootScope.$apply();
                 }, errorHandler
             );
         });
@@ -71,7 +134,7 @@ function SocialSecurityRepository(DataService, $q) {
                         var updateFunction = function(recordToSave) {
                             return function(transaction) {
                                 transaction.executeSql(
-                                    "update socialsecurity set salary = ?, credit = ?, employerss = ?, employerec = ?, employeess = ? where bracket = ?;",
+                                    "update social_security set salary = ?, credit = ?, employer_ss = ?, employer_ec = ?, employee_ss = ? where bracket = ?;",
                                     [recordToSave.salary, recordToSave.credit, recordToSave.employerSS, recordToSave.employerEC, recordToSave.employeeSS, recordToSave.bracket],
                                     function() {  },
                                     errorHandler
@@ -93,7 +156,7 @@ function SocialSecurityRepository(DataService, $q) {
             var insertFunction = function(newRecord) {
                 return function(transaction) {
                     transaction.executeSql(
-                        "insert into socialsecurity (bracket, salary, credit, employerss, employerec, employeess) values(?, ?, ?, ?, ?, ?);",
+                        "insert into social_security (bracket, salary, credit, employer_ss, employer_ec, employee_ss) values(?, ?, ?, ?, ?, ?);",
                         [newRecord.bracket, newRecord.salary, newRecord.credit, newRecord.employerSS, newRecord.employerEC, newRecord.employeeSS],
                         function() {},
                         errorHandler
@@ -109,7 +172,7 @@ function SocialSecurityRepository(DataService, $q) {
                 var deleteFunction = function(socialSecurityRecord) {
                     return function(transaction) {
                         transaction.executeSql(
-                            "delete from socialsecurity where bracket = ?;",
+                            "delete from social_security where bracket = ?;",
                             [socialSecurityRecord.bracket],
                             function() {},
                             errorHandler
@@ -133,3 +196,4 @@ function SocialSecurityRepository(DataService, $q) {
         newRecord: newRecord
     }
 }
+
