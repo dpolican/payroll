@@ -27,6 +27,7 @@
     var defaults = {
         storeName: 'Store',
         storePrefix: 'IDBWrapper-',
+        dbName: 'DbName',
         dbVersion: 1,
         keyPath: 'id',
         autoIncrement: true,

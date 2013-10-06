@@ -89,6 +89,20 @@ payrollModule.controller('PayrollController',function($scope, $dialog, DataServi
         d.open();
     }
 
+    $scope.employeeDialogOptions = {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: false,
+        dialogClass: 'modal employee-dialog',
+        templateUrl: 'employee.html',
+        controller: 'EmployeeController'
+    };
+
+    $scope.showEmployee = function() {
+        var d = $dialog.dialog($scope.employeeDialogOptions);
+        d.open();
+    }
+
     $scope.storeDialogOptions = {
         backdrop: true,
         keyboard: true,
@@ -105,19 +119,23 @@ payrollModule.controller('PayrollController',function($scope, $dialog, DataServi
 });
 
 payrollModule.factory('DataService', DataService);
+payrollModule.controller('CalendarController', CalendarController);
 
 payrollModule.factory('GeneralSetupRepository', GeneralSetupRepository);
 payrollModule.factory('SocialSecurityRepository', SocialSecurityRepository);
 payrollModule.factory('StoreRepository', StoreRepository);
 payrollModule.factory('WithholdingTypesRepository', WithholdingTypesRepository);
 payrollModule.factory('MedicareRepository', MedicareRepository);
+payrollModule.factory('WithholdingRepository', WithholdingRepository);
+payrollModule.factory('EmployeeRepository', EmployeeRepository);
 
-payrollModule.controller('CalendarController', CalendarController);
 payrollModule.controller('GeneralSetupController', GeneralSetupController);
 payrollModule.controller('SocialSecurityController', SocialSecurityController);
 payrollModule.controller('StoreController', StoreController);
 payrollModule.controller('WithholdingTypesController', WithholdingTypesController);
 payrollModule.controller('MedicareController', MedicareController);
+payrollModule.controller('WithholdingController', WithholdingController);
+payrollModule.controller('EmployeeController', EmployeeController);
 
 payrollModule.controller('EmployeeListController', EmployeeListController);
 

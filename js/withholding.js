@@ -59,8 +59,9 @@ function WithholdingRepository(DataService, $q, $rootScope) {
     }
 };
 
-function WithholdingController($scope, dialog, WithholdingRepository) {
+function WithholdingController($scope, dialog, WithholdingRepository, WithholdingTypesRepository) {
     $scope.records = [];
+    $scope.withholdingTypes = [];
 
     $scope.gridOptions = {
         data: 'records',
@@ -69,18 +70,23 @@ function WithholdingController($scope, dialog, WithholdingRepository) {
         enableRowSelection: false,
         enableSorting: false,
         columnDefs: [
-            {field:'pay-schedule', displayName:'Pay Schedule' },
-            {field:'status', displayName:'Status' },
-            {field:'salary-limit', displayName:'Salary Limit', cellFilter: 'currency'},
+            {field:'paySchedule', displayName:'Pay Schedule', enableCellEdit: false },
+            {field:'status', displayName:'Status', width: 88, editableCellTemplate: '<select class="input-small" ng-model="COL_FIELD"><option ng-repeat="wth in withholdingTypes">{{wth.type}}</option></select>' },
+            {field:'salaryLimit', displayName:'Salary Limit', cellFilter: 'currency'},
             {field:'base', displayName:'Base', cellFilter: 'currency'},
             {field:'factor', displayName:'Factor', cellFilter: 'number'}
         ]
     };
 
-    MedicareRepository.getAll()
+    WithholdingRepository.getAll()
         .then(function(result){
             $scope.records = result;
-        }, function() { alert("Error loading Medicare data.")});
+        }, function() { alert("Error loading Withholding data.")});
+
+    WithholdingTypesRepository.getAll()
+        .then(function(result) {
+            $scope.withholdingTypes = result;
+        }, function() { alert("Error loading withholding types.")});
 
     $scope.determineNextId = function () {
         var max = 0;
@@ -97,7 +103,7 @@ function WithholdingController($scope, dialog, WithholdingRepository) {
     };
 
     $scope.addRow = function() {
-        var newrecord = {};
+        var newrecord = { paySchedule: 'Weekly'};
         newrecord.id = $scope.determineNextId();
 
         $scope.records.push(newrecord);
@@ -111,7 +117,7 @@ function WithholdingController($scope, dialog, WithholdingRepository) {
     };
 
     $scope.save = function() {
-        MedicareRepository.saveAll($scope.records);
+        WithholdingRepository.saveAll($scope.records);
         dialog.close();
     };
 

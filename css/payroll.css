@@ -7,6 +7,9 @@
 .vertical-middle { vertical-align: middle; text-align: center; }
 
 .ss-dialog { width: 634px; }
+.withholding-dialog { width: 634px; }
+.wht-dialog { width: 634px; }
+.medicare-dialog { width: 634px; }
 
 .form-horizontal .small-label { width: 120px; }
 .form-horizontal .small-controls { margin-left: 140px; }

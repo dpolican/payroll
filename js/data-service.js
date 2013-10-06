@@ -9,6 +9,7 @@ function DataService() {
     var db = openDatabase("payroll", "1.0", "Payroll Database", 1024 * 1024);
 
     var storeDB = new IDBStore({
+        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'store',
         keyPath: 'id',
@@ -19,6 +20,7 @@ function DataService() {
     });
 
     var withholdingTypeDB = new IDBStore({
+        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'wh-type',
         keyPath: 'id',
@@ -29,12 +31,35 @@ function DataService() {
     });
 
     var medicareDB = new IDBStore({
+        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'medicare',
         keyPath: 'id',
         autoIncrement: true,
         onStoreReady: function(){
             console.log("Medicare DB ready.");
+        }
+    });
+
+    var withholdingDB = new IDBStore({
+        dbName: 'payroll',
+        dbVersion: 1,
+        storeName: 'withholding',
+        keyPath: 'id',
+        autoIncrement: true,
+        onStoreReady: function(){
+            console.log("Withholding DB ready.");
+        }
+    });
+
+    var employeeDB = new IDBStore({
+        dbName: 'payroll',
+        dbVersion: 1,
+        storeName: 'employee',
+        keyPath: 'id',
+        autoIncrement: true,
+        onStoreReady: function(){
+            console.log("Employee DB ready.");
         }
     });
 
@@ -114,6 +139,8 @@ function DataService() {
         storeDB: storeDB,
         withholdingTypeDB: withholdingTypeDB,
         medicareDB: medicareDB,
+        withholdingDB: withholdingDB,
+        employeeDB: employeeDB,
         init: init
     }
 }
