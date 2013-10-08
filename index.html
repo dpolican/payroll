@@ -1,279 +1,483 @@
 <!DOCTYPE html>
 <html ng-app="payroll">
 <head>
-    <title>Payroll</title>
-    <script src="js/idbstore.js"></script>
-    <script src="js/jquery-1.9.1.js"></script>
-    <script src="js/angular.js"></script>
-    <script src="js/ui-bootstrap-tpls-0.5.0.js"></script>
-    <script src="js/ng-grid-2.0.7.min.js"></script>
-    <script src="js/calendar.js"></script>
-    <script src="js/employee.js"></script>
-    <script src="js/employee-list.js"></script>
-    <script src="js/withholding.js"></script>
-    <script src="js/medicare.js"></script>
-    <script src="js/withholding-types.js"></script>
-    <script src="js/social-security.js"></script>
-    <script src="js/general-setup.js"></script>
-    <script src="js/store.js"></script>
-    <script src="js/store.js"></script>
-    <script src="js/data-service.js"></script>
-    <script src="js/payroll.js"></script>
-    <script type="text/ng-template" id="whtype-select.html">
-        <div>
-            <select ng-model="records[ row.rowIndex ].status">
-                <option ng-repeat="wth in withholdingTypes" value="{{wth.type}}">{{wth.description}}</option>
-            </select>
-        </div>
-    </script>
-    <script type="text/ng-template" id="general-setup.html">
-        <div>
-            <div class="modal-header"><h3>General Setup</h3></div>
-            <div class="modal-body">
-                <form class="form-horizontal" name="setupForm" novalidate>
-                    <div class="control-group">
-                        <label class="control-label">Week Ending</label>
-                        <div class="controls"><span class="uneditable-input">{{ data.paydayWeekday }}</span></div>
-                    </div>
-                    <fieldset>
-                        <legend>Work Schedule</legend>
-                        <div class="span3">
-                            <div class="control-group">
-                                <label class="control-label small-label" for="aMIn">AM In</label>
-                                <div class="controls small-controls">
-                                    <input type="time" class="input-time" name="aMIn" id="aMIn" ng-model="data.amIn" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label small-label" for="aMOut">AM Out</label>
-                                <div class="controls small-controls">
-                                    <input type="time" class="input-time" name="aMOut" id="aMOut" ng-model="data.amOut" required/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="span3">
-                            <div class="control-group">
-                                <label class="control-label small-label" for="pMIn">PM In</label>
-                                <div class="controls small-controls">
-                                    <input type="time" class="input-time" name="pMIn" id="pMIn" ng-model="data.pmIn" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label small-label" for="pMOut">Pm Out</label>
-                                <div class="controls small-controls">
-                                    <input type="time" class="input-time" name="pMOut" id="pMOut" ng-model="data.pmOut" required/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="span3">
-                            <div class="control-group">
-                                <label class="control-label small-label" for="regularHours">Regular Hours</label>
-                                <div class="controls small-controls">
-                                    <input type="number" step="0.5" min="1" max="16" class="input-small" name="regularHours" id="regularHours" ng-model="data.regularHours" required/>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset>
-                        <legend>Employee Benefits</legend>
-                        <div class="span5">
-                            <div class="control-group">
-                                <label class="control-label">Pay Schedule</label>
-                                <div class="controls"><span class="uneditable-input">{{ data.paySchedule }}</span></div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="incentivePay">Incentive Pay</label>
-                                <div class="controls">
-                                    <input type="number" name="incentivePay" id="incentivePay" step="0.01" class="input-small" ng-model="data.incentivePay" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="sundayIncentive">Sunday Incentive</label>
-                                <div class="controls">
-                                    <input type="number" name="sundayIncentive" id="sundayIncentive" step="0.01" class="input-small" ng-model="data.sundayIncentive" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="overtimeFactor">Overtime Factor</label>
-                                <div class="controls">
-                                    <input type="number" step="0.001" name="overtimeFactor" id="overtimeFactor" class="input-mini" ng-model="data.overtimeFactor" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="legalHolidayFactor">Legal Holiday Factor</label>
-                                <div class="controls">
-                                    <input type="number" step="0.001" name="legalHolidayFactor" id="legalHolidayFactor" class="input-mini" ng-model="data.legalHolidayFactor" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="specialHolidayFactor">Special Holiday Factor</label>
-                                <div class="controls">
-                                    <input type="number" step="0.001" name="specialHolidayFactor" id="specialHolidayFactor" class="input-mini" ng-model="data.specialHolidayFactor" required/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="sickDays">Sick Days</label>
-                                <div class="controls">
-                                    <input type="number" step="0.5"  name="sickDays" id="sickDays" class="input-mini" ng-model="data.sickDays" required>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="vacationDays">Vacation Days</label>
-                                <div class="controls">
-                                    <input type="number" step="0.5" name="vacationDays" id="vacationDays" class="input-mini" ng-model="data.vacationDays" required />
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success" ng-click="saveSetup()" ng-disabled="setupForm.$invalid">Done</button>
-                <button class="btn btn-warning" ng-click="cancelSetup()">Cancel</button>
-            </div>
-        </div>
-    </script>
-    <script type="text/ng-template" id="social-security.html">
-        <div>
-            <div class="modal-header"><h3>Social Security</h3></div>
-            <div class="modal-body"><div class="gridStyle" ng-grid="gridOptions"></div></div>
-            <div class="modal-footer">
-                <div class="pull-left">
-                    <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
-                    <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
-                </div>
-                <button class="offset1 btn btn-success" ng-click="saveSSS()">Save</button>
-                <button class="btn btn-warning" ng-click="cancelSSS()">Cancel</button>
-            </div>
-        </div>
-    </script>
-    <script type="text/ng-template" id="withholding-types.html">
-        <div>
-            <div class="modal-header"><h3>Withholding Types</h3></div>
-            <div class="modal-body"><div class="gridStyle" ng-grid="gridOptions"></div></div>
-            <div class="modal-footer">
-                <div class="pull-left">
-                    <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
-                    <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
-                </div>
-                <button class="offset1 btn btn-success" ng-click="save()">Save</button>
-                <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-            </div>
-        </div>
-    </script>
-    <script type="text/ng-template" id="medicare.html">
-        <div>
-            <div class="modal-header"><h3>Medicare</h3></div>
-            <div class="modal-body"><div class="gridStyle" ng-grid="gridOptions"></div></div>
-            <div class="modal-footer">
-                <div class="pull-left">
-                    <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
-                    <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
-                </div>
-                <button class="offset1 btn btn-success" ng-click="save()">Save</button>
-                <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-            </div>
-        </div>
-    </script>
-    <script type="text/ng-template" id="withholding.html">
-        <div>
-            <div class="modal-header"><h3>Withholding</h3></div>
-            <div class="modal-body"><div class="gridStyle" ng-grid="gridOptions"></div></div>
-            <div class="modal-footer">
-                <div class="pull-left">
-                    <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
-                    <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
-                </div>
-                <button class="offset1 btn btn-success" ng-click="save()">Save</button>
-                <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-            </div>
-        </div>
-    </script>
-    <script type="text/ng-template" id="store.html">
-        <div>
-            <div class="modal-header"><h3>Stores</h3></div>
-            <div class="modal-body">
-                <div ng-repeat="store in stores" class="form-horizontal">
-                    <div class="control-group">
-                        <label class="control-label small-label">Name</label>
-                        <div class="controls small-controls">
-                            <input type="text" ng-model="store.name" class="span6" required>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label small-label">Address</label>
-                        <div class="controls small-controls">
-                            <input type="text" ng-model="store.address" class="span6" required>
-                        </div>
-                    </div>
-                    <span ng-show=" ! $last "><hr></span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div class="pull-left">
-                    <button class="btn" ng-click="addStore()"><i class="icon-plus"></i> Add Store</button>
-                    <button class="btn" ng-click="deleteStore()"><i class="icon-minus"></i> Delete Store</button>
-                </div>
-                <button class="offset1 btn btn-success" ng-click="save()">Save</button>
-                <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-            </div>
-        </div>
-    </script>
-    <script type="text/ng-template" id="employee.html">
-        <div>
-            <div class="modal-header"><h3>Employees</h3></div>
-            <div class="modal-body">
-                <form class="form" name="setupForm" novalidate>
-                    <div class="control-group">
-                        <label class="control-label">Employee</label>
-                        <div class="controls controls-row">
-                            <select class="span4" ng-model="record" ng-options="(record.lastName + ', ' + record.firstName) for record in records"></select>
-                            <div class="span2 btn-group">
-                                <button class="btn" ng-click="gotoFirst()"><i class="icon-fast-backward"></i></button>
-                                <button class="btn" ng-click="gotoPrevious()"><i class="icon-step-backward"></i></button>
-                                <button class="btn" ng-click="gotoNext()"><i class="icon-step-forward"></i></button>
-                                <button class="btn" ng-click="gotoLast()"><i class="icon-fast-forward"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <hr/>
-                    <div class="control-group">
-                        <label class="checkbox">
-                            <input type="checkbox" ng-model="record.active"/>
-                            Active Status
-                        </label>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">Name</label>
-                        <div class="controls controls-row">
-                            <input type="text" class="input-medium" ng-model="record.firstName" placeholder="First"/>
-                            <input type="text" class="input-small" ng-model="record.middleName" placeholder="Middle"/>
-                            <input type="text" class="input-medium" ng-model="record.lastName" placeholder="Last"/>
-                        </div>
-                    </div>
-                    <tabset>
-                        <tab heading="Salary">Salary Info</tab>
-                        <tab heading="Schedule">Schedule Info</tab>
-                        <tab heading="Loan">Loan Info</tab>
-                    </tabset>
-                </form>
+<title>Payroll</title>
+<script src="js/idbstore.js"></script>
+<script src="js/jquery-1.9.1.js"></script>
+<script src="js/angular.js"></script>
+<script src="js/ui-bootstrap-tpls-0.5.0.js"></script>
+<script src="js/ng-grid-2.0.7.min.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/employee.js"></script>
+<script src="js/employee-list.js"></script>
+<script src="js/withholding.js"></script>
+<script src="js/medicare.js"></script>
+<script src="js/withholding-types.js"></script>
+<script src="js/social-security.js"></script>
+<script src="js/general-setup.js"></script>
+<script src="js/store.js"></script>
+<script src="js/store.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/payroll.js"></script>
+<script type="text/ng-template" id="whtype-select.html">
+    <div>
+        <select ng-model="records[ row.rowIndex ].status">
+            <option ng-repeat="wth in withholdingTypes" value="{{wth.type}}">{{wth.description}}</option>
+        </select>
+    </div>
+</script>
+<script type="text/ng-template" id="general-setup.html">
+    <div>
+        <div class="modal-header"><h3>General Setup</h3></div>
+        <div class="modal-body">
+            <form class="form-horizontal" name="setupForm" novalidate>
+                <div class="control-group">
+                    <label class="control-label">Week Ending</label>
 
-            </div>
-            <div class="modal-footer">
-                <div class="pull-left">
-                    <button class="btn" ng-click="add()"><i class="icon-plus"></i> Add</button>
-                    <button class="btn" ng-click="delete()"><i class="icon-minus"></i> Delete</button>
-                    <button class="btn" ng-click="print()"><i class="icon-print"></i> Print</button>
+                    <div class="controls"><span class="uneditable-input">{{ data.paydayWeekday }}</span></div>
                 </div>
-                <button class="offset1 btn btn-success" ng-click="save()">Save</button>
-                <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-            </div>
+                <fieldset>
+                    <legend>Work Schedule</legend>
+                    <div class="span3">
+                        <div class="control-group">
+                            <label class="control-label small-label" for="aMIn">AM In</label>
 
+                            <div class="controls small-controls">
+                                <input type="time" class="input-time" name="aMIn" id="aMIn" ng-model="data.amIn"
+                                       required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label small-label" for="aMOut">AM Out</label>
+
+                            <div class="controls small-controls">
+                                <input type="time" class="input-time" name="aMOut" id="aMOut" ng-model="data.amOut"
+                                       required/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span3">
+                        <div class="control-group">
+                            <label class="control-label small-label" for="pMIn">PM In</label>
+
+                            <div class="controls small-controls">
+                                <input type="time" class="input-time" name="pMIn" id="pMIn" ng-model="data.pmIn"
+                                       required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label small-label" for="pMOut">Pm Out</label>
+
+                            <div class="controls small-controls">
+                                <input type="time" class="input-time" name="pMOut" id="pMOut" ng-model="data.pmOut"
+                                       required/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="span3">
+                        <div class="control-group">
+                            <label class="control-label small-label" for="regularHours">Regular Hours</label>
+
+                            <div class="controls small-controls">
+                                <input type="number" step="0.5" min="1" max="16" class="input-small" name="regularHours"
+                                       id="regularHours" ng-model="data.regularHours" required/>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Employee Benefits</legend>
+                    <div class="span5">
+                        <div class="control-group">
+                            <label class="control-label">Pay Schedule</label>
+
+                            <div class="controls"><span class="uneditable-input">{{ data.paySchedule }}</span></div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="incentivePay">Incentive Pay</label>
+
+                            <div class="controls">
+                                <input type="number" name="incentivePay" id="incentivePay" step="0.01"
+                                       class="input-small" ng-model="data.incentivePay" required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="sundayIncentive">Sunday Incentive</label>
+
+                            <div class="controls">
+                                <input type="number" name="sundayIncentive" id="sundayIncentive" step="0.01"
+                                       class="input-small" ng-model="data.sundayIncentive" required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="overtimeFactor">Overtime Factor</label>
+
+                            <div class="controls">
+                                <input type="number" step="0.001" name="overtimeFactor" id="overtimeFactor"
+                                       class="input-mini" ng-model="data.overtimeFactor" required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="legalHolidayFactor">Legal Holiday Factor</label>
+
+                            <div class="controls">
+                                <input type="number" step="0.001" name="legalHolidayFactor" id="legalHolidayFactor"
+                                       class="input-mini" ng-model="data.legalHolidayFactor" required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="specialHolidayFactor">Special Holiday Factor</label>
+
+                            <div class="controls">
+                                <input type="number" step="0.001" name="specialHolidayFactor" id="specialHolidayFactor"
+                                       class="input-mini" ng-model="data.specialHolidayFactor" required/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="sickDays">Sick Days</label>
+
+                            <div class="controls">
+                                <input type="number" step="0.5" name="sickDays" id="sickDays" class="input-mini"
+                                       ng-model="data.sickDays" required>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="vacationDays">Vacation Days</label>
+
+                            <div class="controls">
+                                <input type="number" step="0.5" name="vacationDays" id="vacationDays" class="input-mini"
+                                       ng-model="data.vacationDays" required/>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
         </div>
-    </script>
-    <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
-    <link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
-    <link type="text/css" rel="stylesheet" href="css/payroll.css"/>
+        <div class="modal-footer">
+            <button class="btn btn-success" ng-click="saveSetup()" ng-disabled="setupForm.$invalid">Done</button>
+            <button class="btn btn-warning" ng-click="cancelSetup()">Cancel</button>
+        </div>
+    </div>
+</script>
+<script type="text/ng-template" id="social-security.html">
+    <div>
+        <div class="modal-header"><h3>Social Security</h3></div>
+        <div class="modal-body">
+            <div class="gridStyle" ng-grid="gridOptions"></div>
+        </div>
+        <div class="modal-footer">
+            <div class="pull-left">
+                <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
+                <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
+            </div>
+            <button class="offset1 btn btn-success" ng-click="saveSSS()">Save</button>
+            <button class="btn btn-warning" ng-click="cancelSSS()">Cancel</button>
+        </div>
+    </div>
+</script>
+<script type="text/ng-template" id="withholding-types.html">
+    <div>
+        <div class="modal-header"><h3>Withholding Types</h3></div>
+        <div class="modal-body">
+            <div class="gridStyle" ng-grid="gridOptions"></div>
+        </div>
+        <div class="modal-footer">
+            <div class="pull-left">
+                <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
+                <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
+            </div>
+            <button class="offset1 btn btn-success" ng-click="save()">Save</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </div>
+</script>
+<script type="text/ng-template" id="medicare.html">
+    <div>
+        <div class="modal-header"><h3>Medicare</h3></div>
+        <div class="modal-body">
+            <div class="gridStyle" ng-grid="gridOptions"></div>
+        </div>
+        <div class="modal-footer">
+            <div class="pull-left">
+                <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
+                <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
+            </div>
+            <button class="offset1 btn btn-success" ng-click="save()">Save</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </div>
+</script>
+<script type="text/ng-template" id="withholding.html">
+    <div>
+        <div class="modal-header"><h3>Withholding</h3></div>
+        <div class="modal-body">
+            <div class="gridStyle" ng-grid="gridOptions"></div>
+        </div>
+        <div class="modal-footer">
+            <div class="pull-left">
+                <button class="btn" ng-click="addRow()"><i class="icon-plus"></i> Add Row</button>
+                <button class="btn" ng-click="deleteRow()"><i class="icon-minus"></i> Delete Row</button>
+            </div>
+            <button class="offset1 btn btn-success" ng-click="save()">Save</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </div>
+</script>
+<script type="text/ng-template" id="store.html">
+    <div>
+        <div class="modal-header"><h3>Stores</h3></div>
+        <div class="modal-body">
+            <div ng-repeat="store in stores" class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label small-label">Name</label>
+
+                    <div class="controls small-controls">
+                        <input type="text" ng-model="store.name" class="span6" required>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label small-label">Address</label>
+
+                    <div class="controls small-controls">
+                        <input type="text" ng-model="store.address" class="span6" required>
+                    </div>
+                </div>
+                <span ng-show=" ! $last "><hr></span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="pull-left">
+                <button class="btn" ng-click="addStore()"><i class="icon-plus"></i> Add Store</button>
+                <button class="btn" ng-click="deleteStore()"><i class="icon-minus"></i> Delete Store</button>
+            </div>
+            <button class="offset1 btn btn-success" ng-click="save()">Save</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </div>
+</script>
+<script type="text/ng-template" id="employee.html">
+<div>
+<div class="modal-header"><h3>Employee Detail</h3></div>
+<div class="modal-body">
+    <form class="form" name="setupForm" novalidate>
+        <div class="control-group">
+            <label class="control-label">Select Employee</label>
+
+            <div class="controls form-inline">
+                <div class="input-append">
+                    <select class="span4" ng-model="record"
+                            ng-options="(record.lastName + ', ' + record.firstName) for record in records"></select>
+                    <button class="btn" ng-click="delete()"tooltip-placement="bottom" tooltip="Delete employee record">Delete</button>
+                    <button class="btn" ng-click="print()"tooltip-placement="bottom" tooltip="Print employee record">Print</button>
+                </div>
+                <button class="btn" ng-click="add()" tooltip-placement="bottom" tooltip="Add employee record"><i class="icon-plus"></i> Add</button>
+            </div>
+        </div>
+        <hr/>
+        <div class="control-group">
+            <label class="control-label">Name</label>
+            <div class="controls form-inline">
+                <input type="text" class="input-medium" ng-model="record.firstName" placeholder="First" required/>
+                <input type="text" class="input-small" ng-model="record.middleName" placeholder="Middle"/>
+                <input type="text" class="input-medium" ng-model="record.lastName" placeholder="Last" required/>
+                <button ng-model="record.active" class="btn btn-small btn-info" btn-checkbox>Active</button>
+            </div>
+        </div>
+        <tabset>
+            <tab heading="Salary">
+                <div class="form-horizontal">
+                    <div class="control-group">
+                        <label class="control-label">Store</label>
+
+                        <div class="controls">
+                            <select ng-model="record.storeId" ng-options="store.id as store.name for store in stores" required/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Hourly Rate</label>
+                        <div class="controls form-inline">
+                            <input type="number" step="0.05" class="input-small" ng-model="record.hourlyRate" required/>
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="record.overtimePay"/>
+                                Overtime Pay
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Sunday Pay - AM</label>
+
+                        <div class="controls">
+                            <input type="number" step="0.05" class="input-small" ng-model="record.sundayAMPay"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Sunday Pay - PM</label>
+
+                        <div class="controls">
+                            <input type="number" step="0.05" class="input-small" ng-model="record.sundayPMPay"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Withholding Type</label>
+
+                        <div class="controls">
+                            <select ng-model="record.withholdingType"
+                                    ng-options="wht.type as wht.description for wht in withholdingTypes"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Process</label>
+
+                        <div class="controls">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-small btn-info" ng-model="record.processWithholding"
+                                        btn-checkbox>Withholding
+                                </button>
+                                <button type="button" class="btn btn-small btn-info" ng-model="record.processMedicare"
+                                        btn-checkbox>Medicare
+                                </button>
+                                <button type="button" class="btn btn-small btn-info" ng-model="record.processSocialSecurity"
+                                        btn-checkbox>SSS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </tab>
+            <tab heading="Schedule">
+                <div class="form-horizontal">
+                    <div class="row">
+                        <div class="span3">
+                            <div class="control-group">
+                                <label class="control-label small-label" for="amIn">AM In</label>
+                                <div class="controls small-controls">
+                                    <input type="time" class="input-time" name="amIn" id="amIn" ng-model="record.amIn"
+                                           required/>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label small-label" for="amOut">AM Out</label>
+                                <div class="controls small-controls">
+                                    <input type="time" class="input-time" name="amOut" id="amOut" ng-model="record.amOut"
+                                           required/>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label small-label">Sick Days</label>
+                                <div class="controls small-controls">
+                                    <input type="number" step="0.5" class="input-mini" ng-model="record.sickDays"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="span3">
+                            <div class="control-group">
+                                <label class="control-label small-label" for="pmIn">PM In</label>
+                                <div class="controls small-controls">
+                                    <input type="time" class="input-time" name="pmIn" id="pmIn" ng-model="record.pmIn"
+                                           required/>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label small-label" for="pmOut">Pm Out</label>
+                                <div class="controls small-controls">
+                                    <input type="time" class="input-time" name="pmOut" id="pmOut" ng-model="record.pmOut"
+                                           required/>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label small-label">Vacation Days</label>
+                                <div class="controls small-controls">
+                                    <input type="number" step="0.5" class="input-mini" ng-model="record.vacationDays"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="control-group">
+                            <label class="control-label">Incentive Pay</label>
+                            <div class="controls controls-row">
+                                <input type="checkbox" ng-model="record.hasIncentive"/>
+                                <input type="number" step="0.05" class="input-small" ng-model="record.incentivePay"  ng-disabled="!record.hasIncentive"/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">Sunday Incentive</label>
+                            <div class="controls controls-row">
+                                <input type="checkbox" ng-model="record.hasSundayIncentive"/>
+                                <input type="number" step="0.05" class="input-small"
+                                       ng-model="record.sundayIncentivePay" ng-disabled="!record.hasSundayIncentive"/>
+                            </div>
+                        </div>
+                        <div class="pull-right">
+                            <button class="btn btn-small btn-danger" ng-click="restoreDefaults()">Restore Defaults</button>
+                        </div>
+                    </div>
+                </div>
+            </tab>
+            <tab heading="Loans">
+                <div class="form-horizontal" ng-repeat="loan in record.loans">
+                    <div class="control-group">
+                        <label class="control-label">Loan Amount</label>
+
+                        <div class="controls form-inline">
+                            <input type="number" step="0.05" ng-model="loan.amount"/>
+                            <button ng-disabled="(loan.payments.length > 0)" class="btn btn-small btn-danger" ng-click="deleteLoan(this.loan)">Delete Loan</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Start Date</label>
+
+                        <div class="controls">
+                            <input type="date" ng-model="loan.startDate"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Number of Payments</label>
+
+                        <div class="controls">
+                            <input type="number" step="1" class="input-mini ng-model=" loan.numberOfPayments"/>
+                            <span>Weekly</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">End Date</label>
+
+                        <div class="controls">
+                            <span class="uneditable-input">{{ loan.endDate }}</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Annual Interest</label>
+
+                        <div class="controls">
+                            <input type="number" step="0.01" class="input-mini" ng-model="loan.apr"/>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Payment</label>
+
+                        <div class="controls">
+                            <input type="number" step="0.05" class="input-small" ng-model="loan.payment"/>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <div class="pull-right"><button ng-click="addLoan()" class="btn btn-small btn-primary">New Loan</button></div>
+            </tab>
+        </tabset>
+    </form>
+
+</div>
+<div class="modal-footer">
+    <button class="offset1 btn btn-success" ng-click="save()">Save</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>
+
+</div>
+</script>
+<link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
+<link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
+<link type="text/css" rel="stylesheet" href="css/payroll.css"/>
 
 </head>
 <body ng-controller="PayrollController">

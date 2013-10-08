@@ -58,19 +58,38 @@ function EmployeeRepository(DataService, $q, $rootScope) {
     }
 };
 
-function EmployeeController($scope, dialog, EmployeeRepository) {
+function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository, WithholdingTypesRepository, GeneralSetupRepository) {
 
-    $scope.records = [{lastName:"Antaran", firstName:"Roy"},
+    $scope.records = [{lastName:"Antaran", firstName:"Roy", loans: [{ id: 1 }]},
         {lastName: "Bancale", firstName:"Jerry"},
         {lastName: "Bunzo", firstName:"Ernesto"},
         {lastName: "Cacalda", firstName:"Melchor"}];
     $scope.record = $scope.records[0];
-/*
-    EmployeeRepository.getAll()
+    $scope.stores = [];
+    $scope.withholdingTypes = [];
+    $scope.setup = {};
+
+    StoreRepository.getStores()
         .then(function(result){
-            $scope.records = result;
-        }, function() { alert("Error loading Employee data.")});
-*/
+            $scope.stores = result;
+        }, function() { alert("Error loading Stores data for Employee page.")});
+
+    WithholdingTypesRepository.getAll()
+        .then(function(result){
+            $scope.withholdingTypes = result;
+        }, function() { alert("Error loading Withholding Types data for Employee page.")});
+
+    GeneralSetupRepository.getData()
+        .then(function(result){
+            $scope.setup = result;
+        }, function() { alert("Error loading General Setup data.")})
+
+    /*
+        EmployeeRepository.getAll()
+            .then(function(result){
+                $scope.records = result;
+            }, function() { alert("Error loading Employee data.")});
+    */
     $scope.determineNextId = function () {
         var max = 0;
 
@@ -116,16 +135,72 @@ function EmployeeController($scope, dialog, EmployeeRepository) {
         }
     };
     $scope.add = function() {
-        var newrecord = {};
+        var newrecord = { lastName: 'Lastname', firstName: 'Firstname', active: true, loans: [] };
         newrecord.id = $scope.determineNextId();
 
         $scope.records.push(newrecord);
+        $scope.record = newrecord;
     };
 
     $scope.delete = function() {
-        var rows = $scope.records.length;
-        if (rows > 0) {
-            $scope.records.splice(rows - 1, 1);
+        var index = $scope.records.indexOf($scope.record);
+        if (index > -1) {
+            $scope.records.splice(index, 1);
+
+            if (index < $scope.records.length) {
+                $scope.record = $scope.records[index];
+            } else if ($scope.records.length > 0) {
+                $scope.record = $scope.records[0];
+            } else {
+                $scope.record = null;
+            }
+        }
+    };
+
+    $scope.determineNextLoanId = function (loans) {
+        var max = 0;
+
+        for (var i = 0; i < loans.length; i++) {
+            if (max < loans[i].id) {
+                max = loans[i].id;
+            }
+        }
+
+        return 1 + max;
+    };
+
+    $scope.restoreDefaults = function() {
+        if ($scope.record && $scope.setup) {
+            $scope.record.amIn = $scope.setup.amIn;
+            $scope.record.amOut = $scope.setup.amOut;
+            $scope.record.pmIn = $scope.setup.pmIn;
+            $scope.record.pmOut = $scope.setup.pmOut;
+            $scope.record.sickDays = $scope.setup.sickDays;
+            $scope.record.vacationDays = $scope.setup.vacationDays;
+            $scope.record.hasIncentive = ($scope.setup.incentivePay > 0);
+            $scope.record.incentivePay = $scope.setup.incentivePay;
+
+            $scope.record.hasSundayIncentive = ($scope.setup.sundayIncentive > 0);
+            $scope.record.sundayIncentivePay = $scope.setup.sundayIncentive;
+        }
+    };
+    $scope.addLoan = function() {
+        if ($scope.record) {
+            var loans = $scope.record.loans;
+            if (!loans) { loans = []; }
+            var newLoan = {};
+            newLoan.id = $scope.determineNextLoanId(loans);
+            loans.push(newLoan);
+            $scope.record.loans = loans;
+        }
+    };
+
+    $scope.deleteLoan = function(loan) {
+        if ($scope.record) {
+            var loanIndex = $scope.record.loans.indexOf(loan);
+            if (loanIndex > -1) {
+                $scope.record.loans.splice(loanIndex, 1);
+            }
         }
     };
 

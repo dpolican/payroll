@@ -16,10 +16,10 @@ function StoreController($scope, dialog, StoreRepository) {
         }, function() { alert("Error loading Stores data.")});
 
 
-    $scope.cancelStores = function() {
+    $scope.cancel = function() {
         dialog.close();
     };
-    $scope.saveStores = function() {
+    $scope.save = function() {
         StoreRepository.saveStores($scope.stores);
         dialog.close();
     };

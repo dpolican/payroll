@@ -10,7 +10,8 @@
 .withholding-dialog { width: 634px; }
 .wht-dialog { width: 634px; }
 .medicare-dialog { width: 634px; }
+.employee-dialog {  }
 
-.form-horizontal .small-label { width: 120px; }
-.form-horizontal .small-controls { margin-left: 140px; }
+.form-horizontal .small-label { width: 100px; }
+.form-horizontal .small-controls { margin-left: 120px; }
 .input-time { width: 100px }

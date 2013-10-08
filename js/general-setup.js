@@ -11,7 +11,7 @@ var GeneralSetupController = function($scope, dialog, GeneralSetupRepository) {
     GeneralSetupRepository.getData()
         .then(function(result){
             $scope.data = result;
-        }, function() { alert("Error loading General Setup data.")})
+        }, function() { alert("Error loading General Setup data.")});
 
 
     $scope.cancelSetup = function() {
