@@ -6,10 +6,20 @@
  * To change this template use File | Settings | File Templates.
  */
 
-function EmployeeListController($scope) {
-    $scope.employees = [
-        { name: 'Carlos Polican' },
-        { name: 'Dexter Polican' },
-        { name: 'Benjamin Ting'}
-    ];
+function EmployeeListController($scope, EmployeeRepository) {
+    $scope.employees;
+    $scope.employee;
+
+    $scope.loadEmployeeList = function() {
+        EmployeeRepository.getAll()
+            .then(function(result){
+                result.sort(function(a, b) {
+                    return (a.lastName < b.lastName) ? -1 : ((a.lastName > b.lastName) ? 1 : (a.firstName < b.firstName) ? -1 : 1);
+                });
+                $scope.employees = result;
+                if ($scope.employees.length > 0) { $scope.employee = $scope.employees[0]; }
+            }, function() { alert("Error loading Employee list.")});
+    };
+
+    $scope.loadEmployeeList();
 }

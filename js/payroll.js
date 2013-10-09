@@ -12,13 +12,88 @@ var PayrollConstants = {
 
 var payrollModule = angular.module('payroll', ['ui.bootstrap', 'ngGrid']);
 
-payrollModule.controller('PayrollController',function($scope, $dialog, DataService) {
-    $scope.application = {
-        payDays: 4,
-        holidays: { sun: false, mon: false, tue: false, wed: false, thu: false, fri: false, sat: false }
-    };
+payrollModule.controller('PayrollController',function($scope, $dialog, DataService, EmployeeRepository) {
 
     DataService.init();
+
+    var weekEnding = new Date();
+    if (weekEnding.getDay() < 6) {
+        weekEnding.setDate(weekEnding.getDate() + ( 6 - weekEnding.getDay()));
+    }
+
+    $scope.weekEnding = weekEnding;
+    $scope.application = {};
+
+    $scope.$watch('weekEnding', function(newValue, oldValue) {
+        if (newValue) {
+            if (!$scope.application[$scope.weekEnding]) {
+                $scope.application[$scope.weekEnding] = {};
+            }
+            var weekEnding = new Date(newValue.getTime());
+            var firstOfMonth = new Date(newValue.getTime());
+            firstOfMonth.setDate(1);
+            var dayOfFirst = firstOfMonth.getDay();
+            var month = weekEnding.getMonth();
+            var endOfMonth = new Date();
+            var daysInMonth = 28;
+            for (var i = 31; i > 28; i--) {
+                endOfMonth.setTime(newValue.getTime());
+                endOfMonth.setDate(i);
+                if (month == endOfMonth.getMonth()) {
+                    daysInMonth = i;
+                    break;
+                }
+            }
+
+            var daysAfterFirstPayday = daysInMonth - (7 - dayOfFirst);
+            if (daysAfterFirstPayday > 27) {
+                $scope.application[$scope.weekEnding].payDays = 5;
+            } else {
+                $scope.application[$scope.weekEnding].payDays = 4;
+            }
+
+            $scope.selectEmployee($scope.employee);
+        } else {
+            $scope.application[$scope.weekEnding].payDays = 0;
+        }
+    });
+
+    $scope.employees;
+    $scope.employee;
+
+    $scope.selectEmployee = function(employee) {
+        if (!employee[$scope.weekEnding]) {
+            employee[$scope.weekEnding] = { schedule:
+                { sun: { am:false, pm:false, eve:false },
+        mon: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+        tue: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+        wed: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+        thu: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+        fri: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+        sat: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' }}
+            };
+        }
+        $scope.employee = employee;
+    };
+
+    $scope.loadEmployeeList = function() {
+        EmployeeRepository.getAll()
+            .then(function(result){
+                result.sort(function(a, b) {
+                    return (a.lastName < b.lastName) ? -1 : ((a.lastName > b.lastName) ? 1 : (a.firstName < b.firstName) ? -1 : 1);
+                });
+                $scope.employees = result;
+                if ($scope.employees.length > 0) { $scope.employee = $scope.employees[0]; }
+            }, function() { alert("Error loading Employee list.")});
+    };
+
+    $scope.loadEmployeeList();
+
+
+    $scope.disabledWeekdays = function(date, mode) {
+        return ( mode === 'day' && ( date.getDay() < 6 ) );
+    };
+
 
     $scope.generalSetupDialogOptions = {
         backdrop: true,
@@ -119,7 +194,6 @@ payrollModule.controller('PayrollController',function($scope, $dialog, DataServi
 });
 
 payrollModule.factory('DataService', DataService);
-payrollModule.controller('CalendarController', CalendarController);
 
 payrollModule.factory('GeneralSetupRepository', GeneralSetupRepository);
 payrollModule.factory('SocialSecurityRepository', SocialSecurityRepository);

@@ -7,6 +7,7 @@
  */
 function DataService() {
     var db = openDatabase("payroll", "1.0", "Payroll Database", 1024 * 1024);
+    var employeeDbReady;
 
     var storeDB = new IDBStore({
         dbName: 'payroll',
@@ -60,6 +61,7 @@ function DataService() {
         autoIncrement: true,
         onStoreReady: function(){
             console.log("Employee DB ready.");
+            employeeDbReady = true;
         }
     });
 
@@ -141,6 +143,7 @@ function DataService() {
         medicareDB: medicareDB,
         withholdingDB: withholdingDB,
         employeeDB: employeeDB,
+        employeeDbReady: employeeDbReady,
         init: init
     }
 }

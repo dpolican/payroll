@@ -3,6 +3,8 @@
  */
 function EmployeeRepository(DataService, $q, $rootScope) {
 
+    var employees;
+
     var getAll = function() {
         var delay = $q.defer();
         var errorHandler = function(error) {
@@ -20,7 +22,13 @@ function EmployeeRepository(DataService, $q, $rootScope) {
             $rootScope.$apply();
         };
 
-        DataService.employeeDB.getAll(successHandler, errorHandler);
+        if (DataService.employeeDbReady) {
+            DataService.employeeDB.getAll(successHandler, errorHandler);
+        } else {
+            setTimeout(function() {
+                DataService.employeeDB.getAll(successHandler, errorHandler);
+            }, 500);
+        }
 
         return delay.promise;
     };
@@ -60,11 +68,9 @@ function EmployeeRepository(DataService, $q, $rootScope) {
 
 function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository, WithholdingTypesRepository, GeneralSetupRepository) {
 
-    $scope.records = [{lastName:"Antaran", firstName:"Roy", loans: [{ id: 1 }]},
-        {lastName: "Bancale", firstName:"Jerry"},
-        {lastName: "Bunzo", firstName:"Ernesto"},
-        {lastName: "Cacalda", firstName:"Melchor"}];
-    $scope.record = $scope.records[0];
+    var today = new Date();
+    $scope.records = [];
+    $scope.record;
     $scope.stores = [];
     $scope.withholdingTypes = [];
     $scope.setup = {};
@@ -84,12 +90,15 @@ function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository,
             $scope.setup = result;
         }, function() { alert("Error loading General Setup data.")})
 
-    /*
-        EmployeeRepository.getAll()
-            .then(function(result){
-                $scope.records = result;
-            }, function() { alert("Error loading Employee data.")});
-    */
+    EmployeeRepository.getAll()
+        .then(function(result){
+            result.sort(function(a, b) {
+                return (a.lastName < b.lastName) ? -1 : ((a.lastName > b.lastName) ? 1 : (a.firstName < b.firstName) ? -1 : 1);
+            });
+            $scope.records = result;
+            if ($scope.records.length > 0) { $scope.record = $scope.records[0]; }
+        }, function() { alert("Error loading Employee data.")});
+
     $scope.determineNextId = function () {
         var max = 0;
 
@@ -202,6 +211,27 @@ function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository,
                 $scope.record.loans.splice(loanIndex, 1);
             }
         }
+    };
+
+    $scope.calculateEndDate = function(loan) {
+        if (loan.startDate && loan.numberOfPayments) {
+            var startDate = new Date(Date.parse(loan.startDate));
+            var endDate = new Date();
+            endDate.setDate(startDate.getDate() + (loan.numberOfPayments * 7));
+            loan.endDate = endDate;
+            return endDate;
+        }
+
+        return null;
+    };
+
+    $scope.calculatePayment = function(loan) {
+        if (loan.amount && loan.numberOfPayments && loan.apr) {
+            var payment = (loan.amount * (1  + (loan.numberOfPayments / 52 * loan.apr))) / loan.numberOfPayments;
+            loan.payment = payment;
+            return payment;
+        }
+        return null;
     };
 
     $scope.print = function() {
