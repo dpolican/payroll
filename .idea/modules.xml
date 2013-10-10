@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/myangular.iml" filepath="$PROJECT_DIR$/.idea/myangular.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/payroll.iml" filepath="$PROJECT_DIR$/.idea/payroll.iml" />
     </modules>
   </component>

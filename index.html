@@ -29,7 +29,7 @@
     <div>
         <div class="modal-header"><h3>General Setup</h3></div>
         <div class="modal-body">
-            <form class="form-horizontal" name="setupForm" novalidate>
+            <form class="form-horizontal" name="setupForm">
                 <div class="control-group">
                     <label class="control-label">Week Ending</label>
 
@@ -258,7 +258,7 @@
 <div>
 <div class="modal-header"><h3>Employee Detail</h3></div>
 <div class="modal-body">
-    <form class="form" name="employeeForm" novalidate>
+    <form class="form" name="employeeForm">
         <div class="control-group">
             <label class="control-label">Select Employee</label>
 
@@ -531,20 +531,20 @@
             </span>
             <span class="span3">
                 <label>Holidays</label>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.sun" btn-checkbox>S
+                <div class="btn-group" tooltip-placement="bottom" tooltip="Red = No Work, Green = Legal, Orange = Special">
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.sun == 1), 'btn-success': (application[weekEnding].holidays.sun == 2), 'btn-warning': (application[weekEnding].holidays.sun == 3)}" ng-click="toggleHoliday('sun')">S
                     </button>
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.mon" btn-checkbox>M
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.mon == 1), 'btn-success': (application[weekEnding].holidays.mon == 2), 'btn-warning': (application[weekEnding].holidays.mon == 3)}" ng-click="toggleHoliday('mon')">M
                     </button>
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.tue" btn-checkbox>T
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.tue == 1), 'btn-success': (application[weekEnding].holidays.tue == 2), 'btn-warning': (application[weekEnding].holidays.tue == 3)}" ng-click="toggleHoliday('tue')">T
                     </button>
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.wed" btn-checkbox>W
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.wed == 1), 'btn-success': (application[weekEnding].holidays.wed == 2), 'btn-warning': (application[weekEnding].holidays.wed == 3)}" ng-click="toggleHoliday('wed')">W
                     </button>
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.thu" btn-checkbox>T
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.thu == 1), 'btn-success': (application[weekEnding].holidays.thu == 2), 'btn-warning': (application[weekEnding].holidays.thu == 3)}" ng-click="toggleHoliday('thu')">T
                     </button>
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.fri" btn-checkbox>F
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.fri == 1), 'btn-success': (application[weekEnding].holidays.fri == 2), 'btn-warning': (application[weekEnding].holidays.fri == 3)}" ng-click="toggleHoliday('fri')">F
                     </button>
-                    <button type="button" class="btn btn-primary" ng-model="application[weekEnding].holidays.sat" btn-checkbox>S
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEnding].holidays.sat == 1), 'btn-success': (application[weekEnding].holidays.sat == 2), 'btn-warning': (application[weekEnding].holidays.sat == 3)}" ng-click="toggleHoliday('sat')">S
                     </button>
                 </div>
             </span>
@@ -563,119 +563,151 @@
         <div class="span9">
             <tabset>
                 <tab heading="Timesheet">
-                    <div  class="form-horizontal">
-                        <div class="span3">
-                            <div class="control-group">
-                                <label class="control-label" for="inputSickDays">Sick Days</label>
-                                <div class="controls">
-                                    <input type="text" class="span1" id="inputSickDays" ng-model="employee[weekEnding].sickDays"/>
+                    <form name="timesheetForm" novalidate>
+                        <div  class="form-horizontal">
+                            <div class="span3">
+                                <div class="control-group">
+                                    <label class="control-label" for="inputSickDays">Sick Days</label>
+                                    <div class="controls">
+                                        <input type="text" class="span1" id="inputSickDays" ng-model="employee[weekEnding].sickDays"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="inputVacationDays">Vacation</label>
+                                    <div class="controls">
+                                        <input type="text" class="span1" id="inputVacationDays" ng-model="employee[weekEnding].vacationDays"/>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="control-group">
-                                <label class="control-label" for="inputVacationDays">Vacation</label>
-                                <div class="controls">
-                                    <input type="text" class="span1" id="inputVacationDays" ng-model="employee[weekEnding].vacationDays"/>
+                            <div class="span3">
+                                <div class="control-group">
+                                    <label class="control-label" for="inputCommission">Commission</label>
+                                    <div class="controls">
+                                        <input type="text" class="input-small" id="inputCommission" ng-model="employee[weekEnding].commission"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="inputCashAdvance">Cash Advance</label>
+                                    <div class="controls">
+                                        <input type="text" class="input-small" id="inputCashAdvance" ng-model="employee[weekEnding].cashAdvance"/>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="span3">
-                            <div class="control-group">
-                                <label class="control-label" for="inputCommission">Commission</label>
-                                <div class="controls">
-                                    <input type="text" class="input-small" id="inputCommission" ng-model="employee[weekEnding].commission"/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label" for="inputCashAdvance">Cash Advance</label>
-                                <div class="controls">
-                                    <input type="text" class="input-small" id="inputCashAdvance" ng-model="employee[weekEnding].cashAdvance"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <table class="table table-bordered table-condensed timesheet">
-                        <thead>
-                        <tr>
-                            <td>&#160;</td>
-                            <td>Sun</td>
-                            <td>Mon</td>
-                            <td>Tue</td>
-                            <td>Wed</td>
-                            <td>Thu</td>
-                            <td>Fri</td>
-                            <td>Sat</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="vertical-middle">In</td>
-                            <td rowspan="2" class="vertical-middle"><input type="checkbox" tabindex="1" ng-model="employee[weekEnding].schedule.sun.am"></td>
-                            <td><input type="time" class="input-small" tabindex="4" ng-model="employee[weekEnding].schedule.mon.amIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="10" ng-model="employee[weekEnding].schedule.tue.amIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="16" ng-model="employee[weekEnding].schedule.wed.amIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="22" ng-model="employee[weekEnding].schedule.thu.amIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="28" ng-model="employee[weekEnding].schedule.fri.amIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="34" ng-model="employee[weekEnding].schedule.sat.amIn"/></td>
-                        </tr>
-                        <tr>
-
-                            <td class="vertical-middle">Out</td>
-
-                            <td><input type="time" class="input-small" tabindex="5" ng-model="employee[weekEnding].schedule.mon.amOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="11" ng-model="employee[weekEnding].schedule.tue.amOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="17" ng-model="employee[weekEnding].schedule.wed.amOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="23" ng-model="employee[weekEnding].schedule.thu.amOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="29" ng-model="employee[weekEnding].schedule.fri.amOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="35" ng-model="employee[weekEnding].schedule.sat.amOut"/></td>
-                        </tr>
-                        <tr>
-                            <td class="vertical-middle">In</td>
-                            <td rowspan="2" class="vertical-middle"><input type="checkbox" tabindex="2" ng-model="employee[weekEnding].schedule.sun.pm"></td>
-                            <td><input type="time" class="input-small" tabindex="6" ng-model="employee[weekEnding].schedule.mon.pmIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="12" ng-model="employee[weekEnding].schedule.tue.pmIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="18" ng-model="employee[weekEnding].schedule.wed.pmIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="24" ng-model="employee[weekEnding].schedule.thu.pmIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="30" ng-model="employee[weekEnding].schedule.fri.pmIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="36" ng-model="employee[weekEnding].schedule.sat.pmIn"/></td>
-                        </tr>
-                        <tr>
-
-                            <td>Out</td>
-
-                            <td><input type="time" class="input-small" tabindex="7" ng-model="employee[weekEnding].schedule.mon.pmOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="13" ng-model="employee[weekEnding].schedule.tue.pmOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="19" ng-model="employee[weekEnding].schedule.wed.pmOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="25" ng-model="employee[weekEnding].schedule.thu.pmOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="31" ng-model="employee[weekEnding].schedule.fri.pmOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="37" ng-model="employee[weekEnding].schedule.sat.pmOut"/></td>
-                        </tr>
-                        <tr>
-                            <td>In</td>
-                            <td rowspan="2"><input type="checkbox" tabindex="3" ng-model="employee[weekEnding].schedule.sun.eve"></td>
-                            <td><input type="time" class="input-small" tabindex="8" ng-model="employee[weekEnding].schedule.mon.eveIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="14" ng-model="employee[weekEnding].schedule.tue.eveIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="20" ng-model="employee[weekEnding].schedule.wed.eveIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="26" ng-model="employee[weekEnding].schedule.thu.eveIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="32" ng-model="employee[weekEnding].schedule.fri.eveIn"/></td>
-                            <td><input type="time" class="input-small" tabindex="38" ng-model="employee[weekEnding].schedule.sat.eveIn"/></td>
-                        </tr>
-                        <tr>
-
-                            <td>Out</td>
-
-                            <td><input type="time" class="input-small" tabindex="9" ng-model="employee[weekEnding].schedule.mon.eveOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="15" ng-model="employee[weekEnding].schedule.tue.eveOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="21" ng-model="employee[weekEnding].schedule.wed.eveOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="27" ng-model="employee[weekEnding].schedule.thu.eveOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="33" ng-model="employee[weekEnding].schedule.fri.eveOut"/></td>
-                            <td><input type="time" class="input-small" tabindex="39" ng-model="employee[weekEnding].schedule.sat.eveOut"/></td>
-                        </tr>
-                        </tbody>
-                        <tfoot></tfoot>
-                    </table>
+                        <table class="table table-bordered table-condensed timesheet">
+                            <thead>
+                            <tr>
+                                <th width="5%">Sun</th>
+                                <th>Mon</th>
+                                <th>Tue</th>
+                                <th>Wed</th>
+                                <th>Thu</th>
+                                <th>Fri</th>
+                                <th>Sat</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td rowspan="2" class="vertical-middle"><input type="checkbox" tabindex="1" ng-model="timesheet.sun.am"></td>
+                                <td><input type="time" tabindex="4" ng-model="timesheet.mon.amIn"/></td>
+                                <td><input type="time" tabindex="10" ng-model="timesheet.tue.amIn"/></td>
+                                <td><input type="time" tabindex="16" ng-model="timesheet.wed.amIn"/></td>
+                                <td><input type="time" tabindex="22" ng-model="timesheet.thu.amIn"/></td>
+                                <td><input type="time" tabindex="28" ng-model="timesheet.fri.amIn"/></td>
+                                <td><input type="time" tabindex="34" ng-model="timesheet.sat.amIn"/></td>
+                            </tr>
+                            <tr>
+                                <td><input type="time" tabindex="5" ng-model="timesheet.mon.amOut" inout-validate/></td>
+                                <td><input type="time" tabindex="11" ng-model="timesheet.tue.amOut" inout-validate/></td>
+                                <td><input type="time" tabindex="17" ng-model="timesheet.wed.amOut" inout-validate/></td>
+                                <td><input type="time" tabindex="23" ng-model="timesheet.thu.amOut" inout-validate/></td>
+                                <td><input type="time" tabindex="29" ng-model="timesheet.fri.amOut" inout-validate/></td>
+                                <td><input type="time" tabindex="35" ng-model="timesheet.sat.amOut" inout-validate/></td>
+                            </tr>
+                            <tr>
+                                <td rowspan="2" class="vertical-middle"><input type="checkbox" tabindex="2" ng-model="employee[weekEnding].timesheet.sun.pm"></td>
+                                <td><input type="time" tabindex="6" ng-model="timesheet.mon.pmIn" inout-validate/></td>
+                                <td><input type="time" tabindex="12" ng-model="timesheet.tue.pmIn" inout-validate/></td>
+                                <td><input type="time" tabindex="18" ng-model="timesheet.wed.pmIn" inout-validate/></td>
+                                <td><input type="time" tabindex="24" ng-model="timesheet.thu.pmIn" inout-validate/></td>
+                                <td><input type="time" tabindex="30" ng-model="timesheet.fri.pmIn" inout-validate/></td>
+                                <td><input type="time" tabindex="36" ng-model="timesheet.sat.pmIn" inout-validate/></td>
+                            </tr>
+                            <tr>
+                                <td><input type="time" tabindex="7" ng-model="timesheet.mon.pmOut" inout-validate/></td>
+                                <td><input type="time" tabindex="13" ng-model="timesheet.tue.pmOut" inout-validate/></td>
+                                <td><input type="time" tabindex="19" ng-model="timesheet.wed.pmOut" inout-validate/></td>
+                                <td><input type="time" tabindex="25" ng-model="timesheet.thu.pmOut" inout-validate/></td>
+                                <td><input type="time" tabindex="31" ng-model="timesheet.fri.pmOut" inout-validate/></td>
+                                <td><input type="time" tabindex="37" ng-model="timesheet.sat.pmOut" inout-validate/></td>
+                            </tr>
+                            <tr>
+                                <td rowspan="2"><input type="checkbox" tabindex="3" ng-model="timesheet.sun.eve"></td>
+                                <td><input type="time" tabindex="8" ng-model="timesheet.mon.eveIn" inout-validate/></td>
+                                <td><input type="time" tabindex="14" ng-model="timesheet.tue.eveIn" inout-validate/></td>
+                                <td><input type="time" tabindex="20" ng-model="timesheet.wed.eveIn" inout-validate/></td>
+                                <td><input type="time" tabindex="26" ng-model="timesheet.thu.eveIn" inout-validate/></td>
+                                <td><input type="time" tabindex="32" ng-model="timesheet.fri.eveIn" inout-validate/></td>
+                                <td><input type="time" tabindex="38" ng-model="timesheet.sat.eveIn" inout-validate/></td>
+                            </tr>
+                            <tr>
+                                <td><input type="time" tabindex="9" ng-model="timesheet.mon.eveOut" inout-validate/></td>
+                                <td><input type="time" tabindex="15" ng-model="timesheet.tue.eveOut" inout-validate/></td>
+                                <td><input type="time" tabindex="21" ng-model="timesheet.wed.eveOut" inout-validate/></td>
+                                <td><input type="time" tabindex="27" ng-model="timesheet.thu.eveOut" inout-validate/></td>
+                                <td><input type="time" tabindex="33" ng-model="timesheet.fri.eveOut" inout-validate/></td>
+                                <td><input type="time" tabindex="39" ng-model="timesheet.sat.eveOut" inout-validate/></td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <td></td>
+                                <td>{{ timesheet.mon.hours | number:2 }} hours</td>
+                                <td>{{ timesheet.tue.hours | number:2 }} hours</td>
+                                <td>{{ timesheet.wed.hours | number:2 }} hours</td>
+                                <td>{{ timesheet.thu.hours | number:2 }} hours</td>
+                                <td>{{ timesheet.fri.hours | number:2 }} hours</td>
+                                <td>{{ timesheet.sat.hours | number:2 }} hours</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td colspan="3">
+                                    <span class="label label-success" ng-show="timesheet.incentiveMet">Incentive Met</span>
+                                    <span class="label label-warning" ng-hide="timesheet.incentiveMet">Incentive Not Met</span>
+                                </td>
+                                <td colspan="3"><span class="muted">Week Total:</span> {{ timesheet.total | number:2 }} hours</td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </form>
                 </tab>
-                <tab heading="Pay Stub">
+                <tab heading="Pay Stub" disabled="timesheetForm.$invalid" select="calculatePay()">
                     <div>
+                        <div class="span3">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2">Earnings</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Regular</td>
+                                        <td>{{ paystub.regularPay | currency }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Incentive</td>
+                                        <td>{{ paystub.incentivePay | currency }}</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Total</th>
+                                        <th>{{ paystub.total | currency }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
 
                     </div>
                 </tab>

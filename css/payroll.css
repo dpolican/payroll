@@ -29,5 +29,27 @@
 .timesheet tbody td input[type='time']{
     margin: 0;
     border: none;
+    width: auto;
+    -webkit-border-radius: 0px;
+    -moz-border-radius: 0px;
+    border-radius: 0px;
+}
+
+.timesheet tfoot td {
+    background-color: #fafafa;
+    font-weight: bold;
+    color: #666666;
+}
+
+.timesheet thead th {
+    background-color: #fafafa;
+}
+
+.timesheet input.ng-invalid.ng-dirty {
+    background-color: #ffcccc;
+}
+
+.timesheet input.ng-valid.ng-dirty {
+    background-color: #ffffff;
 }
 
