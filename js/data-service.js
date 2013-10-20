@@ -9,8 +9,17 @@ function DataService() {
     var db = openDatabase("payroll", "1.0", "Payroll Database", 1024 * 1024);
     var employeeDbReady;
 
+    var payrollDB = new IDBStore({
+        dbVersion: 1,
+        storeName: 'payroll',
+        keyPath: 'id',
+        autoIncrement: true,
+        onStoreReady: function(){
+            console.log("Payroll DB ready.");
+        }
+    });
+
     var storeDB = new IDBStore({
-        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'store',
         keyPath: 'id',
@@ -21,7 +30,6 @@ function DataService() {
     });
 
     var withholdingTypeDB = new IDBStore({
-        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'wh-type',
         keyPath: 'id',
@@ -32,7 +40,6 @@ function DataService() {
     });
 
     var medicareDB = new IDBStore({
-        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'medicare',
         keyPath: 'id',
@@ -43,7 +50,6 @@ function DataService() {
     });
 
     var withholdingDB = new IDBStore({
-        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'withholding',
         keyPath: 'id',
@@ -54,7 +60,6 @@ function DataService() {
     });
 
     var employeeDB = new IDBStore({
-        dbName: 'payroll',
         dbVersion: 1,
         storeName: 'employee',
         keyPath: 'id',
@@ -92,7 +97,6 @@ function DataService() {
     };
 
     var init = function() {
-
     };
 
         db.transaction(function(transaction) {
@@ -143,7 +147,8 @@ function DataService() {
         medicareDB: medicareDB,
         withholdingDB: withholdingDB,
         employeeDB: employeeDB,
-        employeeDbReady: employeeDbReady,
+        employeeDbReady: function() { return employeeDbReady; },
+        payrollDB: payrollDB,
         init: init
     }
 }

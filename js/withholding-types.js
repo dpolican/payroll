@@ -68,7 +68,8 @@ function WithholdingTypesController($scope, dialog, WithholdingTypesRepository) 
         enableCellEditOnFocus: true,
         enableCellSelection: true,
         enableRowSelection: false,
-        enableSorting: false,
+        enableSorting: true,
+        sortInfo: { fields: ['type'], directions: ['asc'] },
         columnDefs: [
             {field:'type', displayName:'Type', width: 68 },
             {field:'description', displayName:'Description'}

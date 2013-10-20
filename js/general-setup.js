@@ -5,7 +5,7 @@
  * Time: 8:13 AM
  * To change this template use File | Settings | File Templates.
  */
-var GeneralSetupController = function($scope, dialog, GeneralSetupRepository) {
+var GeneralSetupController = function($scope, $rootScope, dialog, GeneralSetupRepository) {
     $scope.data = {};
 
     GeneralSetupRepository.getData()
@@ -18,13 +18,15 @@ var GeneralSetupController = function($scope, dialog, GeneralSetupRepository) {
         dialog.close();
     };
     $scope.saveSetup = function() {
-        GeneralSetupRepository.saveData($scope.data);
+        GeneralSetupRepository.saveData($scope.data, function() {
+            $rootScope.$broadcast(PayrollConstants.generalSetupUpdatedEvent);
+        });
         dialog.close();
     };
 };
 
 function GeneralSetupRepository(DataService, $q, $rootScope) {
-    var data = {};
+    var data;
 
     var defaultData = { id: 0, paydayWeekday: PayrollConstants.weekdays[6],
         amIn: '08:00', amOut: '12:00', pmIn: '13:00', pmOut: '18:00',
@@ -75,46 +77,67 @@ function GeneralSetupRepository(DataService, $q, $rootScope) {
 
         var delay = $q.defer();
 
+        var successHandler = function (result) {
+            if (result.length > 0) {
+                data = angular.copy(result[0]);
+                delay.resolve(result[0]);
+            }
+            else
+            {
+                data = angular.copy(defaultData);
+                delay.resolve(angular.copy(defaultData));
+            }
+
+            $rootScope.$apply();
+        };
+
         var errorHandler = function(transaction, error) {
             errorOccurred = true;
             delay.reject('Error retrieving general setup data. Error was ' + error.message + ' (Code ' + error.code + ')');
             return false;
         };
 
-        DataService.exec(function (transaction) {
-            transaction.executeSql(
-                "SELECT * from " + DataService.generalSetupTable.tableName + " where " + DataService.generalSetupTable.id + " = ?", [1], function (transaction, result) {
-                    var record = defaultData;
-                    if (result.rows.length > 0) {
-                        var row = result.rows.item(0);
-                        record.id = row[DataService.generalSetupTable.id];
-                        record.paydayWeekday = convertToWeekdayString(row[DataService.generalSetupTable.paydayWeekday]);
-                        record.amIn = row[DataService.generalSetupTable.amIn];
-                        record.amOut = row[DataService.generalSetupTable.amOut];
-                        record.pmIn = row[DataService.generalSetupTable.pmIn];
-                        record.pmOut = row[DataService.generalSetupTable.pmOut];
-                        record.regularHours = row[DataService.generalSetupTable.regularHours];
-                        record.paySchedule = convertToPayScheduleString([DataService.generalSetupTable.paySchedule]);
-                        record.incentivePay = row[DataService.generalSetupTable.incentivePay];
-                        record.sundayIncentive = row[DataService.generalSetupTable.sundayIncentive];
-                        record.overtimeFactor = row[DataService.generalSetupTable.overtimeFactor];
-                        record.legalHolidayFactor = row[DataService.generalSetupTable.legalHolidayFactor];
-                        record.specialHolidayFactor = row[DataService.generalSetupTable.specialHolidayFactor];
-                        record.sickDays = row[DataService.generalSetupTable.sickDays];
-                        record.vacationDays = row[DataService.generalSetupTable.vacationDays];
-                    }
-                    data = angular.copy(record);
-                    delay.resolve(record);
-                    $rootScope.$apply();
-                }, errorHandler
-            );
-        });
+        if (data) {
+            delay.resolve(data);
+        } else {
+            DataService.payrollDB.getAll(successHandler, errorHandler);
+            /*
+            DataService.exec(function (transaction) {
+                transaction.executeSql(
+                    "SELECT * from " + DataService.generalSetupTable.tableName + " where " + DataService.generalSetupTable.id + " = ?", [1], function (transaction, result) {
+                        var record = defaultData;
+                        if (result.rows.length > 0) {
+                            var row = result.rows.item(0);
+                            record.id = row[DataService.generalSetupTable.id];
+                            record.paydayWeekday = convertToWeekdayString(row[DataService.generalSetupTable.paydayWeekday]);
+                            record.amIn = row[DataService.generalSetupTable.amIn];
+                            record.amOut = row[DataService.generalSetupTable.amOut];
+                            record.pmIn = row[DataService.generalSetupTable.pmIn];
+                            record.pmOut = row[DataService.generalSetupTable.pmOut];
+                            record.regularHours = row[DataService.generalSetupTable.regularHours];
+                            record.paySchedule = convertToPayScheduleString([DataService.generalSetupTable.paySchedule]);
+                            record.incentivePay = row[DataService.generalSetupTable.incentivePay];
+                            record.sundayIncentive = row[DataService.generalSetupTable.sundayIncentive];
+                            record.overtimeFactor = row[DataService.generalSetupTable.overtimeFactor];
+                            record.legalHolidayFactor = row[DataService.generalSetupTable.legalHolidayFactor];
+                            record.specialHolidayFactor = row[DataService.generalSetupTable.specialHolidayFactor];
+                            record.sickDays = row[DataService.generalSetupTable.sickDays];
+                            record.vacationDays = row[DataService.generalSetupTable.vacationDays];
+                        }
+                        data = angular.copy(record);
+                        delay.resolve(record);
+                        $rootScope.$apply();
+                    }, errorHandler
+                );
+            });
+            */
+        }
 
         return delay.promise;
     };
 
 
-    var saveData = function(record) {
+    var saveData = function(record, successHandler) {
         var recordToSave = record;
 
         var errorOccurred = false;
@@ -125,6 +148,9 @@ function GeneralSetupRepository(DataService, $q, $rootScope) {
             return false;
         };
 
+        DataService.payrollDB.put(recordToSave, function(id) { console.log("ID: " + id) }, errorHandler);
+
+        /*
         var insertFunction = function(recordToSave) {
             return function (transaction) {
                 transaction.executeSql(
@@ -215,9 +241,12 @@ function GeneralSetupRepository(DataService, $q, $rootScope) {
         } else {
             DataService.exec(updateFunction(recordToSave));
         }
-
+        */
 
         data = angular.copy(record);
+        if (successHandler) {
+            successHandler();
+        }
     };
 
 

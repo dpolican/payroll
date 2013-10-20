@@ -5,6 +5,10 @@ function EmployeeRepository(DataService, $q, $rootScope) {
 
     var employees;
 
+    var getUpdatedEmployees = function() {
+        return employees;
+    };
+
     var getAll = function() {
         var delay = $q.defer();
         var errorHandler = function(error) {
@@ -19,21 +23,24 @@ function EmployeeRepository(DataService, $q, $rootScope) {
 
             employees = angular.copy(records);
             delay.resolve(records);
-            $rootScope.$apply();
+            //if(!$rootScope.$$phase) { $rootScope.$digest(); }
         };
 
-        if (DataService.employeeDbReady) {
+        if (employees) {
+            delay.resolve(angular.copy(employees));
+        } else if (DataService.employeeDbReady) {
             DataService.employeeDB.getAll(successHandler, errorHandler);
         } else {
             setTimeout(function() {
-                DataService.employeeDB.getAll(successHandler, errorHandler);
-            }, 500);
+                this.getAll(successHandler, errorHandler);
+            }.bind(this), 100);
         }
 
         return delay.promise;
     };
 
-    var saveAll = function(updatedRecords) {
+    var saveAll = function(updatedRecords, successHandler) {
+        if (!updatedRecords || angular.equals(updatedRecords, employees)) { return; }
         var recordsToSave = updatedRecords;
         var ids = [];
 
@@ -58,6 +65,9 @@ function EmployeeRepository(DataService, $q, $rootScope) {
         });
 
         employees = angular.copy(updatedRecords);
+        if (successHandler) {
+            successHandler();
+        }
     };
 
     return {
@@ -66,7 +76,7 @@ function EmployeeRepository(DataService, $q, $rootScope) {
     }
 };
 
-function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository, WithholdingTypesRepository, GeneralSetupRepository) {
+function EmployeeController($scope, $rootScope, dialog, EmployeeRepository, StoreRepository, WithholdingTypesRepository, GeneralSetupRepository) {
 
     var today = new Date();
     $scope.records = [];
@@ -97,6 +107,7 @@ function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository,
             });
             $scope.records = result;
             if ($scope.records.length > 0) { $scope.record = $scope.records[0]; }
+            if(!$scope.$$phase) { $scope.$apply(); }
         }, function() { alert("Error loading Employee data.")});
 
     $scope.determineNextId = function () {
@@ -217,6 +228,7 @@ function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository,
         if (loan.startDate && loan.numberOfPayments) {
             var startDate = new Date(Date.parse(loan.startDate));
             var endDate = new Date();
+            endDate.setTime(startDate.getTime());
             endDate.setDate(startDate.getDate() + (loan.numberOfPayments * 7));
             loan.endDate = endDate;
             return endDate;
@@ -239,7 +251,15 @@ function EmployeeController($scope, dialog, EmployeeRepository, StoreRepository,
     };
 
     $scope.save = function() {
-        EmployeeRepository.saveAll($scope.records);
+        var maxId = $scope.determineNextId();
+        angular.forEach($scope.records, function(record) {
+            if (!record.id) {
+                record.id = maxId++;
+            }
+        });
+        EmployeeRepository.saveAll($scope.records, function() {
+            $rootScope.$broadcast(PayrollConstants.employeeUpdatedEvent);
+        });
         dialog.close();
     };
 

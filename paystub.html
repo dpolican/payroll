@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html ng-app="payroll">
+<head>
+    <title>Pay Stub</title>
+    <script src="js/idbstore.js"></script>
+    <script src="js/jquery-1.9.1.js"></script>
+    <script src="js/angular.js"></script>
+    <script src="js/ui-bootstrap-tpls-0.5.0.js"></script>
+    <script src="js/ng-grid-2.0.7.min.js"></script>
+    <script src="js/employee.js"></script>
+    <script src="js/employee-list.js"></script>
+    <script src="js/withholding.js"></script>
+    <script src="js/medicare.js"></script>
+    <script src="js/withholding-types.js"></script>
+    <script src="js/social-security.js"></script>
+    <script src="js/general-setup.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/payroll.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
+    <link type="text/css" rel="stylesheet" href="css/payroll.css"/>
+    <style type="text/css">
+        @page { size: auto; margin: 25mm 25mm 25mm 25mm; }
+    </style>
+</head>
+<body ng-controller="PayrollController">
+<div class="container">
+    <h2>{{ employee.lastName + ', ' + employee.firstName }}<small class="pull-right">Week Ending: <strong>{{ weekEnding | date:longDate }}</strong></small></h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th colspan="2">Earnings</th>
+            <th class="span2"></th>
+            <th colspan="2">Deductions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Regular</td>
+            <td><strong class="pull-right">{{ paystub.regularPay | currency }}</strong></td>
+            <td></td>
+            <td>Withholding</td>
+            <td><strong class="pull-right">{{ paystub.withholding | currency }}</strong></td>
+        </tr>
+        <tr>
+            <td>Overtime</td>
+            <td><strong class="pull-right">{{ paystub.overtimePay | currency }}</strong></td>
+            <td></td>
+            <td>SSS</td>
+            <td><strong class="pull-right">{{ paystub.employeeSS | currency }}</strong></td>
+        </tr>
+        <tr>
+            <td>Sick/Vacation</td>
+            <td><strong class="pull-right">{{ paystub.benefitPay | currency }}</strong></td>
+            <td></td>
+            <td>Medicare</td>
+            <td><strong class="pull-right">{{ paystub.employeeMedicare | currency }}</strong></td>
+        </tr>
+        <tr>
+            <td>Incentive</td>
+            <td><strong class="pull-right">{{ paystub.incentivePay | currency }}</strong></td>
+            <td></td>
+            <td>Cash Advance</td>
+            <td><strong class="pull-right">{{ paystub.cashAdvance | currency }}</strong></td>
+        </tr>
+        <tr>
+            <td>Commission</td>
+            <td><strong class="pull-right">{{ paystub.commission | currency }}</strong></td>
+            <td></td>
+            <td>Loan</td>
+            <td><strong class="pull-right">{{ paystub.loan | currency }}</strong></td>
+        </tr>
+        <tr>
+            <td>Sunday Pay</td>
+            <td><strong class="pull-right">{{ paystub.sundayPay | currency }}</strong></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td>Sunday Incentive</td>
+            <td><strong class="pull-right">{{ paystub.sundayIncentive | currency }}</strong></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td><strong>Total Earnings</strong></td>
+            <td><strong class="pull-right">{{ paystub.totalPay | currency }}</strong></td>
+            <td></td>
+            <td><strong>Total Deductions</strong></td>
+            <td><strong class="pull-right">{{ paystub.totalDeduction | currency }}</strong></td>
+        </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3"></th>
+                <th><strong>Net Pay</strong></th>
+                <th><strong class="pull-right">{{ paystub.netPay | currency }}</strong></th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>

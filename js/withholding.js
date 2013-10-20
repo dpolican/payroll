@@ -2,7 +2,7 @@
  * Created by ewkoenw on 9/30/13.
  */
 function WithholdingRepository(DataService, $q, $rootScope) {
-    var withholdings = [];
+    var withholdings;
 
     var getAll = function() {
         var delay = $q.defer();
@@ -21,12 +21,16 @@ function WithholdingRepository(DataService, $q, $rootScope) {
             $rootScope.$apply();
         };
 
-        DataService.withholdingDB.getAll(successHandler, errorHandler);
+        if (withholdings) {
+            delay.resolve(angular.copy(withholdings));
+        } else {
+            DataService.withholdingDB.getAll(successHandler, errorHandler);
+        }
 
         return delay.promise;
     };
 
-    var saveAll = function(updatedRecords) {
+    var saveAll = function(updatedRecords, successHandler) {
         var recordsToSave = updatedRecords;
         var ids = [];
 
@@ -46,11 +50,14 @@ function WithholdingRepository(DataService, $q, $rootScope) {
 
         angular.forEach(withholdings, function(withholding, index) {
             if (ids.indexOf(withholding.id) < 0) {
-                DataService.medicareDB.remove(withholding.id, function() {}, errorHandler);
+                DataService.withholdingDB.remove(withholding.id, function() {}, errorHandler);
             }
         });
 
         withholdings = angular.copy(updatedRecords);
+        if (successHandler) {
+            successHandler();
+        }
     };
 
     return {
@@ -59,27 +66,36 @@ function WithholdingRepository(DataService, $q, $rootScope) {
     }
 };
 
-function WithholdingController($scope, dialog, WithholdingRepository, WithholdingTypesRepository) {
+function WithholdingController($scope, $rootScope, $filter, dialog, WithholdingRepository, WithholdingTypesRepository) {
     $scope.records = [];
     $scope.withholdingTypes = [];
 
     $scope.gridOptions = {
         data: 'records',
+        selectWithCheckboxOnly: true,
+        showSelectionCheckbox: true,
         enableCellEditOnFocus: true,
-        enableCellSelection: true,
-        enableRowSelection: false,
+        enableCellSelection: false,
+        enableRowSelection: true,
         enableSorting: false,
+        selectedItems: [],
         columnDefs: [
             {field:'paySchedule', displayName:'Pay Schedule', enableCellEdit: false },
             {field:'status', displayName:'Status', width: 88, editableCellTemplate: '<select class="input-small" ng-model="COL_FIELD"><option ng-repeat="wth in withholdingTypes">{{wth.type}}</option></select>' },
             {field:'salaryLimit', displayName:'Salary Limit', cellFilter: 'currency'},
             {field:'base', displayName:'Base', cellFilter: 'currency'},
-            {field:'factor', displayName:'Factor', cellFilter: 'number'}
+            {field:'factor', displayName:'Factor', cellFilter: 'number:2'}
         ]
     };
 
     WithholdingRepository.getAll()
         .then(function(result){
+            result = $filter('orderBy')(result, function(record) {
+                var pad = '000000000';
+                var limit = parseFloat(record.salaryLimit);
+                var limitString = "" + limit;
+                return record.status + (pad.substring(0, pad.length - limitString.length) + limitString);
+            });
             $scope.records = result;
         }, function() { alert("Error loading Withholding data.")});
 
@@ -103,21 +119,25 @@ function WithholdingController($scope, dialog, WithholdingRepository, Withholdin
     };
 
     $scope.addRow = function() {
-        var newrecord = { paySchedule: 'Weekly'};
+        var newrecord = { paySchedule: 'Weekly', status: '' };
         newrecord.id = $scope.determineNextId();
 
         $scope.records.push(newrecord);
     };
 
-    $scope.deleteRow = function() {
-        var rows = $scope.records.length;
-        if (rows > 0) {
-            $scope.records.splice(rows - 1, 1);
-        }
+    $scope.deleteRows = function() {
+        angular.forEach($scope.gridOptions.selectedItems, function(selected) {
+            var index = $scope.records.indexOf(selected);
+            if (index > -1) {
+                $scope.records.splice(index, 1);
+            }
+        });
     };
 
     $scope.save = function() {
-        WithholdingRepository.saveAll($scope.records);
+        WithholdingRepository.saveAll($scope.records, function() {
+            $rootScope.$broadcast(PayrollConstants.withholdingUpdatedEvent);
+        });
         dialog.close();
     };
 

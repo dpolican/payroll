@@ -5,7 +5,7 @@
  * Time: 6:45 AM
  * To change this template use File | Settings | File Templates.
  */
-function SocialSecurityController($scope, dialog, SocialSecurityRepository) {
+function SocialSecurityController($scope, $rootScope, dialog, SocialSecurityRepository) {
 
     $scope.records = [];
 
@@ -31,7 +31,9 @@ function SocialSecurityController($scope, dialog, SocialSecurityRepository) {
         }, function() { alert("Error loading Social Security records.")});
 
     $scope.saveSSS = function() {
-        SocialSecurityRepository.saveAll($scope.records);
+        SocialSecurityRepository.saveAll($scope.records, function() {
+            $rootScope.$broadcast(PayrollConstants.socialSecurityUpdatedEvent);
+        });
         dialog.close();
     };
 
@@ -69,7 +71,7 @@ function SocialSecurityController($scope, dialog, SocialSecurityRepository) {
 
 function SocialSecurityRepository(DataService, $q, $rootScope) {
 
-    var socialSecurityRecords = [];
+    var socialSecurityRecords;
 
     var getAll = function() {
         var errorOccurred = false;
@@ -82,34 +84,38 @@ function SocialSecurityRepository(DataService, $q, $rootScope) {
             return false;
         };
 
-        DataService.exec(function (transaction) {
-            transaction.executeSql(
-                "SELECT * from social_security order by bracket;", [], function (transaction, result) {
-                    var records = [];
-                    for (var i = 0; i < result.rows.length; i++) {
-                        var row = result.rows.item(i);
-                        var record = {};
-                        record.bracket = row.bracket;
-                        record.salary = row.salary;
-                        record.credit = row.credit;
-                        record.employerSS = row.employer_ss;
-                        record.employerEC = row.employer_ec;
-                        record.employeeSS = row.employee_ss;
-                        records.push(record);
-                    }
+        if (socialSecurityRecords) {
+            delay.resolve(angular.copy(socialSecurityRecords));
+        } else {
+            DataService.exec(function (transaction) {
+                transaction.executeSql(
+                    "SELECT * from social_security order by bracket;", [], function (transaction, result) {
+                        var records = [];
+                        for (var i = 0; i < result.rows.length; i++) {
+                            var row = result.rows.item(i);
+                            var record = {};
+                            record.bracket = row.bracket;
+                            record.salary = row.salary;
+                            record.credit = row.credit;
+                            record.employerSS = row.employer_ss;
+                            record.employerEC = row.employer_ec;
+                            record.employeeSS = row.employee_ss;
+                            records.push(record);
+                        }
 
-                    socialSecurityRecords = angular.copy(records);
-                    delay.resolve(records);
-                    $rootScope.$apply();
-                }, errorHandler
-            );
-        });
+                        socialSecurityRecords = angular.copy(records);
+                        delay.resolve(records);
+                        $rootScope.$apply();
+                    }, errorHandler
+                );
+            });
+        }
 
         return delay.promise;
     };
 
 
-    var saveAll = function(updatedRecords) {
+    var saveAll = function(updatedRecords, successHandler) {
         var recordsToSave = updatedRecords;
         var newRecords = [];
         var ids = [];
@@ -184,6 +190,10 @@ function SocialSecurityRepository(DataService, $q, $rootScope) {
         });
 
         socialSecurityRecords = angular.copy(updatedRecords);
+
+        if (successHandler) {
+            successHandler();
+        }
     };
 
     var newRecord = function() {

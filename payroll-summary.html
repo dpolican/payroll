@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html ng-app="payroll">
+<head>
+    <title>Payroll Summary</title>
+    <script src="js/idbstore.js"></script>
+    <script src="js/jquery-1.9.1.js"></script>
+    <script src="js/angular.js"></script>
+    <script src="js/ui-bootstrap-tpls-0.5.0.js"></script>
+    <script src="js/ng-grid-2.0.7.min.js"></script>
+    <script src="js/employee.js"></script>
+    <script src="js/employee-list.js"></script>
+    <script src="js/withholding.js"></script>
+    <script src="js/medicare.js"></script>
+    <script src="js/withholding-types.js"></script>
+    <script src="js/social-security.js"></script>
+    <script src="js/general-setup.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/print.js"></script>
+    <script src="js/payroll.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
+    <link type="text/css" rel="stylesheet" href="css/payroll.css"/>
+    <style type="text/css">
+        @page { size: auto; margin: 25mm 15mm 25mm 15mm; }
+        .page {page-break-after:always}
+        table { font-size: 80% }
+        th.amount-header { text-align: center; }
+        .upperline { border-top: solid 1px #000000; }
+    </style>
+</head>
+<body ng-controller="PayrollController">
+<div>
+    <div class="page container" ng-repeat="store in stores">
+        <div class="text-center">
+            <h5>{{ store.name }}<br/><small>{{ store.address }}</small></h5>
+            <h4>EMPLOYEES' WEEKLY PAYROLL</h4>
+            <span class="pull-right">Week Ending: <strong>{{ weekEnding | date:longDate }}</strong></span>
+        </div>
+        <p class="span8"><small>
+            WE HEREBY ACKNOWLEDGE to have received from <strong>{{ store.name}}</strong> of {{ store.address }}
+            the sum specified opposite our respective names, as full compensation for the service rendered.
+        </small></p>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th rowspan="2" width="12%">Employee</th>
+                <th rowspan="2" width="6%" class="amount-header">Work<br/>Days</th>
+                <th rowspan="2" width="6%" class="amount-header">Total<br/>Regular<br/>Wage</th>
+                <th rowspan="2" width="6%" class="amount-header">Sick/<br/>Vacation<br/>Pay</th>
+                <th rowspan="2" width="6%" class="amount-header">Incentive<br/>Pay</th>
+                <th rowspan="2" width="6%" class="amount-header">Comm<br/>-ission</th>
+                <th rowspan="2" width="6%" class="amount-header">Gross<br/>Pay</th>
+                <th colspan="4" class="amount-header">Deductions</th>
+                <th rowspan="2" width="6%" class="amount-header">Net<br/>Amount<br/>Paid</th>
+                <th rowspan="2"><nobr>Signature of Payee</nobr></th>
+            </tr>
+            <tr>
+                <th width="6%" class="amount-header">SSS</th>
+                <th width="6%" class="amount-header">M-Care</th>
+                <th width="6%" class="amount-header">W-Tax</th>
+                <th width="6%" class="amount-header">Loan</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="paystub in getPayStubsForStore(this.store)">
+                    <td>{{ paystub.employeeLastName }}, {{ paystub.employeeFirstName }}</td>
+                    <td><span class="pull-right">{{ paystub.paystub.daysOfWork }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.regularPay | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.benefitPay | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.incentivePay | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.commission | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.totalPay | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.employeeSS | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.employeeMedicare | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.withholding | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.loan | currency }}</span></td>
+                    <td><span class="pull-right">{{ paystub.paystub.netPay | currency }}</span></td>
+                    <td></td>
+                </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th>Totals</th>
+                <th></th>
+                <th><span class="pull-right">{{ storePayrollTotals.regularPay | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.benefitPay | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.incentivePay | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.commission | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.totalPay | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.employeeSS | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.employeeMedicare | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.withholding | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.loan | currency }}</span></th>
+                <th><span class="pull-right">{{ storePayrollTotals.netPay | currency }}</span></th>
+                <th></th>
+            </tr>
+            </tfoot>
+        </table>
+        <div class="container">
+            <div class="row">
+                <small class="offset6 span6">
+                    I HEREBY CERTIFY that I personally paid in cash to each employee whose name
+                    appears in the above payroll the amount set opposite his name.
+                    The total amount paid in this payroll is {{ storePayrollTotals.netPay | currency }}, including their overtime and holiday pay.
+                </small>
+            </div>
+            <div class="row">
+                <small class="span3">
+                    Approved for Payment:
+                </small>
+            </div>
+            <br/>
+            <div class="row">
+                <span class="offset6 span2 text-center">
+                    <strong>{{ weekEnding | date:fullDate }}</strong>
+                </span>
+            </div>
+            <div class="row">
+                <small class="span3 text-center upperline">
+                    Manager
+                </small>
+                <small class="offset3 span2 text-center upperline">
+                    Date of Payment
+                </small>
+                <small class="span4 text-center upperline">
+                    Paymaster
+                </small>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

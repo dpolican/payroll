@@ -18,6 +18,7 @@ function EmployeeListController($scope, EmployeeRepository) {
                 });
                 $scope.employees = result;
                 if ($scope.employees.length > 0) { $scope.employee = $scope.employees[0]; }
+                if(!$scope.$$phase) { $scope.$apply(); }
             }, function() { alert("Error loading Employee list.")});
     };
 

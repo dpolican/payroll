@@ -2,7 +2,7 @@
  * Created by ewkoenw on 9/30/13.
  */
 function MedicareRepository(DataService, $q, $rootScope) {
-    var medicares = [];
+    var medicares;
 
     var getAll = function() {
         var delay = $q.defer();
@@ -21,12 +21,16 @@ function MedicareRepository(DataService, $q, $rootScope) {
             $rootScope.$apply();
         };
 
-        DataService.medicareDB.getAll(successHandler, errorHandler);
+        if (medicares) {
+            delay.resolve(angular.copy(medicares));
+        } else {
+            DataService.medicareDB.getAll(successHandler, errorHandler);
+        }
 
         return delay.promise;
     };
 
-    var saveAll = function(updatedRecords) {
+    var saveAll = function(updatedRecords, successHandler) {
         var recordsToSave = updatedRecords;
         var ids = [];
 
@@ -51,6 +55,10 @@ function MedicareRepository(DataService, $q, $rootScope) {
         });
 
         medicares = angular.copy(updatedRecords);
+
+        if (successHandler) {
+            successHandler();
+        }
     };
 
     return {
@@ -59,7 +67,7 @@ function MedicareRepository(DataService, $q, $rootScope) {
     }
 };
 
-function MedicareController($scope, dialog, MedicareRepository) {
+function MedicareController($scope, $rootScope, dialog, MedicareRepository) {
     $scope.records = [];
 
     $scope.gridOptions = {
@@ -109,7 +117,9 @@ function MedicareController($scope, dialog, MedicareRepository) {
     };
 
     $scope.save = function() {
-        MedicareRepository.saveAll($scope.records);
+        MedicareRepository.saveAll($scope.records, function() {
+            $rootScope.$broadcast(PayrollConstants.medicareUpdatedEvent);
+        });
         dialog.close();
     };
 
