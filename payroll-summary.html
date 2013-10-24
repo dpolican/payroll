@@ -17,7 +17,6 @@
     <script src="js/store.js"></script>
     <script src="js/store.js"></script>
     <script src="js/data-service.js"></script>
-    <script src="js/print.js"></script>
     <script src="js/payroll.js"></script>
     <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
     <link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
@@ -44,58 +43,58 @@
         </small></p>
         <table class="table table-bordered">
             <thead>
-            <tr>
-                <th rowspan="2" width="12%">Employee</th>
-                <th rowspan="2" width="6%" class="amount-header">Work<br/>Days</th>
-                <th rowspan="2" width="6%" class="amount-header">Total<br/>Regular<br/>Wage</th>
-                <th rowspan="2" width="6%" class="amount-header">Sick/<br/>Vacation<br/>Pay</th>
-                <th rowspan="2" width="6%" class="amount-header">Incentive<br/>Pay</th>
-                <th rowspan="2" width="6%" class="amount-header">Comm<br/>-ission</th>
-                <th rowspan="2" width="6%" class="amount-header">Gross<br/>Pay</th>
-                <th colspan="4" class="amount-header">Deductions</th>
-                <th rowspan="2" width="6%" class="amount-header">Net<br/>Amount<br/>Paid</th>
-                <th rowspan="2"><nobr>Signature of Payee</nobr></th>
-            </tr>
-            <tr>
-                <th width="6%" class="amount-header">SSS</th>
-                <th width="6%" class="amount-header">M-Care</th>
-                <th width="6%" class="amount-header">W-Tax</th>
-                <th width="6%" class="amount-header">Loan</th>
-            </tr>
+                <tr>
+                    <th rowspan="2" width="12%">Employee</th>
+                    <th rowspan="2" width="6%" class="amount-header">Work<br/>Days</th>
+                    <th rowspan="2" width="6%" class="amount-header">Total<br/>Regular<br/>Wage</th>
+                    <th rowspan="2" width="6%" class="amount-header">Sick/<br/>Vacation<br/>Pay</th>
+                    <th rowspan="2" width="6%" class="amount-header">Incentive<br/>Pay</th>
+                    <th rowspan="2" width="6%" class="amount-header">Comm<br/>-ission</th>
+                    <th rowspan="2" width="6%" class="amount-header">Gross<br/>Pay</th>
+                    <th colspan="4" class="amount-header">Deductions</th>
+                    <th rowspan="2" width="6%" class="amount-header">Net<br/>Amount<br/>Paid</th>
+                    <th rowspan="2"><nobr>Signature of Payee</nobr></th>
+                </tr>
+                <tr>
+                    <th width="6%" class="amount-header">SSS</th>
+                    <th width="6%" class="amount-header">M-Care</th>
+                    <th width="6%" class="amount-header">W-Tax</th>
+                    <th width="6%" class="amount-header">Loan</th>
+                </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="paystub in getPayStubsForStore(this.store)">
-                    <td>{{ paystub.employeeLastName }}, {{ paystub.employeeFirstName }}</td>
-                    <td><span class="pull-right">{{ paystub.paystub.daysOfWork }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.regularPay | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.benefitPay | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.incentivePay | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.commission | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.totalPay | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.employeeSS | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.employeeMedicare | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.withholding | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.loan | currency }}</span></td>
-                    <td><span class="pull-right">{{ paystub.paystub.netPay | currency }}</span></td>
+                <tr ng-repeat="employee in employees | filter:{'storeId':store.id}">
+                    <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.daysOfWork }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.regularPay | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.benefitPay | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.incentivePay | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.commission | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.totalPay | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.employeeSS | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.employeeMedicare | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.withholding | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.loan | currency }}</span></td>
+                    <td><span class="pull-right">{{ employee[weekEndingKey].paystub.netPay | currency }}</span></td>
                     <td></td>
                 </tr>
             </tbody>
             <tfoot>
-            <tr>
-                <th>Totals</th>
-                <th></th>
-                <th><span class="pull-right">{{ storePayrollTotals.regularPay | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.benefitPay | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.incentivePay | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.commission | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.totalPay | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.employeeSS | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.employeeMedicare | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.withholding | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.loan | currency }}</span></th>
-                <th><span class="pull-right">{{ storePayrollTotals.netPay | currency }}</span></th>
-                <th></th>
-            </tr>
+                <tr>
+                    <th>Totals</th>
+                    <th></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.regularPay | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.benefitPay | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.incentivePay | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.commission | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.totalPay | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.employeeSS | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.employeeMedicare | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.withholding | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.loan | currency }}</span></th>
+                    <th><span class="pull-right">{{ store[weekEndingKey].totals.netPay | currency }}</span></th>
+                    <th></th>
+                    </tr>
             </tfoot>
         </table>
         <div class="container">

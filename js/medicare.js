@@ -18,7 +18,7 @@ function MedicareRepository(DataService, $q, $rootScope) {
 
             medicares = angular.copy(records);
             delay.resolve(records);
-            $rootScope.$apply();
+            if (!$rootScope.$$phase){ $rootScope.$digest(); }
         };
 
         if (medicares) {
@@ -46,9 +46,9 @@ function MedicareRepository(DataService, $q, $rootScope) {
             var recordToSave = recordsToSave[i];
             ids.push(recordToSave.id);
             DataService.medicareDB.put(recordToSave, function(id) { console.log("ID: " + id) }, errorHandler);
-        };
+        }
 
-        angular.forEach(medicares, function(medicare, index) {
+        angular.forEach(medicares, function(medicare) {
             if (ids.indexOf(medicare.id) < 0) {
                 DataService.medicareDB.remove(medicare.id, function() {}, errorHandler);
             }
@@ -65,7 +65,7 @@ function MedicareRepository(DataService, $q, $rootScope) {
         saveAll: saveAll,
         getAll: getAll
     }
-};
+}
 
 function MedicareController($scope, $rootScope, dialog, MedicareRepository) {
     $scope.records = [];
@@ -127,4 +127,4 @@ function MedicareController($scope, $rootScope, dialog, MedicareRepository) {
         dialog.close();
     };
 
-};
+}
