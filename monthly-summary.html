@@ -22,7 +22,7 @@
     <link type="text/css" rel="stylesheet" href="css/ng-grid.css"/>
     <link type="text/css" rel="stylesheet" href="css/payroll.css"/>
     <style type="text/css">
-        @page { size: auto; margin: 25mm 15mm 25mm 15mm; }
+        @page { size: auto; margin: 25mm 25mm 25mm 25mm; }
         .page {page-break-after:always}
         th.amount-header { text-align: center; }
         .upperline { border-top: solid 1px #000000; }
@@ -42,10 +42,10 @@
                 <tr>
                     <td colspan="3"><strong>Gross Pay Summary: {{ weekEnding | date:'MMMM' }}</strong></td>
                 </tr>
-                <tr ng-repeat="employee in employees | filter:{'storeId':store.id}">
+                <tr ng-repeat="employee in employees | filter:{'storeId':store.id}"">
                     <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
                     <td>
-
+                        <span class="pull-right">{{ calculateMonthlyTotal(employee, weekEnding, 'totalPay') | currency }}</span>
                     </td>
                     <td>
 
@@ -53,8 +53,11 @@
                 </tr>
                 <tr>
                     <td><strong>Total</strong></td>
-                    <td></td>
-                    <td></td>
+                    <td>
+                        <strong class="pull-right">{{ calculateMonthlyTotal(store.id, weekEnding, 'totalPay') | currency }}</strong>
+                    </td>
+                    <td>
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="3"><strong>Withholding Tax Paid Summary: {{ weekEnding | date:'MMMM' }}</strong></td>
@@ -65,13 +68,15 @@
 
                     </td>
                     <td>
-
+                        <span class="pull-right">{{ calculateMonthlyTotal(employee, weekEnding, 'withholding') | currency }}</span>
                     </td>
                 </tr>
                 <tr>
                     <td><strong>Total</strong></td>
                     <td></td>
-                    <td></td>
+                    <td>
+                        <strong class="pull-right">{{ calculateMonthlyTotal(store.id, weekEnding, 'withholding') | currency }}</strong>
+                    </td>
                 </tr>
             </tbody>
         </table>

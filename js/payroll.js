@@ -398,6 +398,93 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         });
     };
 
+// Begin methods for weekly summary page
+
+    $scope.calculateMonthlyTotal = function(employeeOrStoreId, weekEnding, property) {
+        var employees = [];
+        if (typeof(employeeOrStoreId) === "number") {
+            var storeId = employeeOrStoreId;
+
+            angular.forEach($scope.employees, function(employee) {
+                if (employee.storeId === storeId) {
+                    this.push(employee);
+                }
+            }, employees);
+        } else {
+            employees.push(employeeOrStoreId);
+        }
+
+        var payday = new Date();
+        payday.setTime(weekEnding.getTime());
+        var paymonth = payday.getMonth();
+        payday.setDate(payday.getDate() % 7);
+
+        var runningTotal = 0;
+        do {
+            var key = PayrollUtils.getKeyFromDate(payday);
+
+            angular.forEach(employees, function(employee) {
+                if (employee[key] && employee[key].paystub && employee[key].paystub[property]) {
+                    runningTotal += employee[key].paystub[property];
+                }
+            });
+
+            payday.setDate(payday.getDate() + 7);
+        } while (payday.getMonth() === paymonth);
+        return runningTotal;
+    };
+
+// End methods for weekly summary page.
+
+// Begin methods for yearly summary page.
+
+    $scope.calculateYearlyTotal = function(employeeOrStoreId, weekEnding, property) {
+        var employees = [];
+        if (typeof(employeeOrStoreId) === "number") {
+            var storeId = employeeOrStoreId;
+
+            angular.forEach($scope.employees, function(employee) {
+                if (employee.storeId === storeId) {
+                    this.push(employee);
+                }
+            }, employees);
+        } else {
+            employees.push(employeeOrStoreId);
+        }
+
+        var payyear = weekEnding.getFullYear();
+        var dayOfWeek = weekEnding.getDay();
+
+        var payday = new Date();
+        payday.setTime(weekEnding.getTime());
+        payday.setMonth(0);
+        payday.setDate(1);
+        if (dayOfWeek != payday.getDay()) {
+            var diff = dayOfWeek - payday.getDay();
+            if (diff < 0) {
+                diff += 7;
+            }
+
+            payday.setDate(1 + diff);
+        }
+
+        var runningTotal = 0;
+        do {
+            var key = PayrollUtils.getKeyFromDate(payday);
+
+            angular.forEach(employees, function(employee) {
+                if (employee[key] && employee[key].paystub && employee[key].paystub[property]) {
+                    runningTotal += employee[key].paystub[property];
+                }
+            });
+
+            payday.setDate(payday.getDate() + 7);
+        } while (payday.getFullYear() === payyear);
+        return runningTotal;
+    };
+
+// End methods for yearly summary page.
+
     $scope.selectWithholdingType = function(code) {
         var result = null;
 
