@@ -16,8 +16,29 @@
 <script src="js/general-setup.js"></script>
 <script src="js/store.js"></script>
 <script src="js/store.js"></script>
+<script src="js/import-data.js"></script>
 <script src="js/data-service.js"></script>
 <script src="js/payroll.js"></script>
+<script type="text/ng-template" id="import.html">
+    <div>
+        <div class="modal-header"><h3>Import Data</h3></div>
+        <div class="modal-body">
+            <div class="text-center">
+            <div class="input-append">
+                <input ng-show="filename" class="span5 uneditable-input" ng-model="filename"/>
+                <input ng-hide="filename" class="span5 uneditable-input" value="No file selected."/>
+                <button class="btn btn-default btn-file">
+                    Select File <input type="file" name="filename" onchange="angular.element(this).scope().filenameChanged(this)">
+                </button>
+            </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-success" ng-click="import()">Import</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </div>
+</script>
 <script type="text/ng-template" id="whtype-select.html">
     <div>
         <select ng-model="records[ row.rowIndex ].status">
@@ -491,6 +512,9 @@
                     <li class="divider"></li>
                     <li><a tabindex="-1" href="#" ng-click="showStores()">Stores</a></li>
                     <li><a tabindex="-1" href="#" ng-click="showWithholdingTypes()">Withholding Types</a></li>
+                    <li class="divider"></li>
+                    <li><a tabindex="-1" href="#" ng-click="exportData()">Export Data</a></li>
+                    <li><a tabindex="-1" href="#" ng-click="showImportDialog()">Import Data</a></li>
                 </ul>
             </li>
             <li class="dropdown">
@@ -526,24 +550,24 @@
             </span>
             <span class="span4">
                 <label>Paydays For The Month</label>
-                <span class="uneditable-input input-mini">{{ application[weekEndingKey].payDays }}</span>
+                <span class="uneditable-input input-mini">{{ generalSetup.application[weekEndingKey].payDays }}</span>
             </span>
             <span class="span3">
                 <label>Holidays</label>
                 <div class="btn-group" tooltip-placement="bottom" tooltip="Red = No Work, Green = Legal, Orange = Special">
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.sun == 1), 'btn-success': (application[weekEndingKey].holidays.sun == 2), 'btn-warning': (application[weekEndingKey].holidays.sun == 3)}" ng-click="toggleHoliday('sun')">S
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.sun == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.sun == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.sun == 3)}" ng-click="toggleHoliday('sun')">S
                     </button>
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.mon == 1), 'btn-success': (application[weekEndingKey].holidays.mon == 2), 'btn-warning': (application[weekEndingKey].holidays.mon == 3)}" ng-click="toggleHoliday('mon')">M
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.mon == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.mon == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.mon == 3)}" ng-click="toggleHoliday('mon')">M
                     </button>
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.tue == 1), 'btn-success': (application[weekEndingKey].holidays.tue == 2), 'btn-warning': (application[weekEndingKey].holidays.tue == 3)}" ng-click="toggleHoliday('tue')">T
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.tue == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.tue == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.tue == 3)}" ng-click="toggleHoliday('tue')">T
                     </button>
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.wed == 1), 'btn-success': (application[weekEndingKey].holidays.wed == 2), 'btn-warning': (application[weekEndingKey].holidays.wed == 3)}" ng-click="toggleHoliday('wed')">W
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.wed == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.wed == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.wed == 3)}" ng-click="toggleHoliday('wed')">W
                     </button>
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.thu == 1), 'btn-success': (application[weekEndingKey].holidays.thu == 2), 'btn-warning': (application[weekEndingKey].holidays.thu == 3)}" ng-click="toggleHoliday('thu')">T
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.thu == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.thu == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.thu == 3)}" ng-click="toggleHoliday('thu')">T
                     </button>
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.fri == 1), 'btn-success': (application[weekEndingKey].holidays.fri == 2), 'btn-warning': (application[weekEndingKey].holidays.fri == 3)}" ng-click="toggleHoliday('fri')">F
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.fri == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.fri == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.fri == 3)}" ng-click="toggleHoliday('fri')">F
                     </button>
-                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (application[weekEndingKey].holidays.sat == 1), 'btn-success': (application[weekEndingKey].holidays.sat == 2), 'btn-warning': (application[weekEndingKey].holidays.sat == 3)}" ng-click="toggleHoliday('sat')">S
+                    <button type="button" ng-class="{ 'btn': true, 'btn-danger': (generalSetup.application[weekEndingKey].holidays.sat == 1), 'btn-success': (generalSetup.application[weekEndingKey].holidays.sat == 2), 'btn-warning': (generalSetup.application[weekEndingKey].holidays.sat == 3)}" ng-click="toggleHoliday('sat')">S
                     </button>
                 </div>
             </span>

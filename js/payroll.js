@@ -18,7 +18,8 @@ var PayrollConstants = {
     withholdingUpdatedEvent: 'withholdingUpdate',
     socialSecurityUpdatedEvent: 'socialSecurityUpdate',
     medicareUpdatedEvent: 'medicareUpdate',
-    generalSetupUpdatedEvent: 'generalSetupUpdate'
+    generalSetupUpdatedEvent: 'generalSetupUpdate',
+    importEvent: 'importEvent'
 };
 
 var PayrollUtils = {
@@ -175,14 +176,14 @@ var PayrollUtils = {
     calculateSocialSecurity: function($filter, socialSecurityCriteria, paystub, $scope) {
         var filteredSocialSecurityCriteria = $filter('filter')(socialSecurityCriteria,
             function (item) {
-                return (parseFloat(item.salary) < (paystub.subtotalPay * $scope.application[$scope.weekEndingKey].payDays));
+                return (parseFloat(item.salary) < (paystub.subtotalPay * $scope.generalSetup.application[$scope.weekEndingKey].payDays));
             });
         filteredSocialSecurityCriteria = $filter('orderBy')(filteredSocialSecurityCriteria, function (item) {
             return parseFloat(item.salary)
         }, true);
         var socialSecurityCriterium = filteredSocialSecurityCriteria.length > 0 ? filteredSocialSecurityCriteria[0] : null;
         if (socialSecurityCriterium) {
-            paystub.employeeSS = socialSecurityCriterium.employeeSS / $scope.application[$scope.weekEndingKey].payDays;
+            paystub.employeeSS = socialSecurityCriterium.employeeSS / $scope.generalSetup.application[$scope.weekEndingKey].payDays;
         } else {
             paystub.employeeSS = 0;
         }
@@ -191,14 +192,14 @@ var PayrollUtils = {
     calculateMedicare: function($filter, medicareCriteria, paystub, $scope) {
         var filteredMedicareCriteria = $filter('filter')(medicareCriteria,
             function (item) {
-                return (parseFloat(item.from) < (paystub.subtotalPay * $scope.application[$scope.weekEndingKey].payDays));
+                return (parseFloat(item.from) < (paystub.subtotalPay * $scope.generalSetup.application[$scope.weekEndingKey].payDays));
             });
         filteredMedicareCriteria = $filter('orderBy')(filteredMedicareCriteria, function (item) {
             return parseFloat(item.from)
         }, true);
         var medicareCriterium = filteredMedicareCriteria.length > 0 ? filteredMedicareCriteria[0] : null;
         if (medicareCriterium) {
-            paystub.employeeMedicare = medicareCriterium.employee / $scope.application[$scope.weekEndingKey].payDays;
+            paystub.employeeMedicare = medicareCriterium.employee / $scope.generalSetup.application[$scope.weekEndingKey].payDays;
         } else {
             paystub.employeeMedicare = 0;
         }
@@ -208,8 +209,8 @@ var PayrollUtils = {
 var payrollModule = angular.module('payroll', ['ui.bootstrap', 'ngGrid']);
 
 payrollModule.controller('PayrollController',function($scope, $filter, $dialog, $location, DataService, EmployeeRepository,
-          GeneralSetupRepository, WithholdingRepository, SocialSecurityRepository, MedicareRepository,
-          WithholdingTypesRepository, StoreRepository) {
+                                                      GeneralSetupRepository, WithholdingRepository, SocialSecurityRepository, MedicareRepository,
+                                                      WithholdingTypesRepository, StoreRepository) {
 
     DataService.init();
 
@@ -221,20 +222,26 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
     $scope.weekEnding = weekEnding;
     $scope.weekEndingKey = PayrollUtils.getKeyFromDate($scope.weekEnding);
 
-    $scope.application = { };
     $scope.generalSetup;
     $scope.employees;
-    $scope.employee;
-    $scope.timesheet;
-    $scope.paystub;
     $scope.withholdingCriteria;
     $scope.socialSecurityCriteria;
     $scope.medicareCriteria;
     $scope.withholdingTypes;
     $scope.stores;
+
+    $scope.employee;
+    $scope.timesheet;
+    $scope.paystub;
     $scope.paystubSaved;
 
     $scope.activeOnlyFilter = { active: true };
+
+// Begin observers
+
+    $scope.$on(PayrollConstants.importEvent, function(event, args) {
+        $scope.importData(args);
+    });
 
     $scope.$on(PayrollConstants.employeeUpdatedEvent, function(event, args) {
         $scope.loadEmployeeList();
@@ -259,36 +266,7 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
     $scope.$watch('weekEnding', function(newValue, oldValue) {
         if (newValue) {
             $scope.weekEndingKey = PayrollUtils.getKeyFromDate(newValue);
-            if (!$scope.application) {
-                $scope.application = {};
-            }
-            if (!$scope.application[$scope.weekEndingKey]) {
-                $scope.application[$scope.weekEndingKey] = { payDays: 0, holidays: {} };
-            }
-            var weekEnding = new Date(newValue.getTime());
-            var firstOfMonth = new Date(newValue.getTime());
-            firstOfMonth.setDate(1);
-            var dayOfFirst = firstOfMonth.getDay();
-            var month = weekEnding.getMonth();
-            var endOfMonth = new Date();
-            var daysInMonth = 28;
-            for (var i = 31; i > 28; i--) {
-                endOfMonth.setTime(newValue.getTime());
-                endOfMonth.setDate(i);
-                if (month == endOfMonth.getMonth()) {
-                    daysInMonth = i;
-                    break;
-                }
-            }
-
-            var daysAfterFirstPayday = daysInMonth - (7 - dayOfFirst);
-            if (daysAfterFirstPayday > 27) {
-                $scope.application[$scope.weekEndingKey].payDays = 5;
-            } else {
-                $scope.application[$scope.weekEndingKey].payDays = 4;
-            }
-
-            $scope.selectEmployee($scope.employee);
+            $scope.updatePayweekInfo();
         }
     });
 
@@ -315,88 +293,10 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
                 PayrollUtils.isScheduleMet(schedule, timesheet.thu) &&
                 PayrollUtils.isScheduleMet(schedule, timesheet.fri) &&
                 PayrollUtils.isScheduleMet(schedule, timesheet.sat);
-
         }
     }, true);
 
-    $scope.calculatePay = function() {
-        var timesheet = $scope.timesheet;
-        var paystub = $scope.paystub;
-        var employee = $scope.employee;
-        var generalSetup = $scope.generalSetup;
-        var weekInfo = $scope.application[PayrollUtils.getKeyFromDate($scope.weekEnding)];
-
-        if (timesheet && paystub && employee) {
-            $scope.paystubSaved = false;
-            paystub.daysOfWork = 0;
-            paystub.regularPay = 0;
-            paystub.overtimePay = 0;
-            paystub.commission = timesheet.commission ? parseFloat(timesheet.commission) : 0;
-            paystub.cashAdvance = timesheet.cashAdvance ? parseFloat(timesheet.cashAdvance) : 0;
-            PayrollUtils.calculateIncentivePay(employee, timesheet, paystub);
-            PayrollUtils.calculateDayPay('mon', employee, timesheet, paystub, generalSetup, weekInfo);
-            PayrollUtils.calculateDayPay('tue', employee, timesheet, paystub, generalSetup, weekInfo);
-            PayrollUtils.calculateDayPay('wed', employee, timesheet, paystub, generalSetup, weekInfo);
-            PayrollUtils.calculateDayPay('thu', employee, timesheet, paystub, generalSetup, weekInfo);
-            PayrollUtils.calculateDayPay('fri', employee, timesheet, paystub, generalSetup, weekInfo);
-            PayrollUtils.calculateDayPay('sat', employee, timesheet, paystub, generalSetup, weekInfo);
-            PayrollUtils.calculateOvertimePay(employee, paystub, generalSetup);
-            PayrollUtils.calculateSundayPay(employee, timesheet, paystub, generalSetup);
-            PayrollUtils.calculateBenefitPay(employee, timesheet, paystub, generalSetup);
-
-            paystub.subtotalPay = paystub.regularPay + paystub.overtimePay + paystub.benefitPay + paystub.incentivePay
-            + paystub.commission;
-            paystub.totalPay = paystub.subtotalPay + paystub.sundayPay + paystub.sundayIncentive;
-
-            PayrollUtils.calculateWithholding($filter, $scope.withholdingCriteria, employee, paystub);
-            PayrollUtils.calculateSocialSecurity($filter, $scope.socialSecurityCriteria, paystub, $scope);
-            PayrollUtils.calculateMedicare($filter, $scope.medicareCriteria, paystub, $scope);
-
-            // Calculate Loan
-            paystub.loan = 0;
-            angular.forEach(employee.loans, function(loan) {
-                if (loan.startDate && loan.payment && loan.endDate) {
-                    if (PayrollUtils.getTimelessDate(loan.startDate).getTime() <= PayrollUtils.getTimelessDate($scope.weekEnding)
-                        && PayrollUtils.getTimelessDate(loan.endDate).getTime() >= PayrollUtils.getTimelessDate($scope.weekEnding)) {
-                        paystub.loan += loan.payment;
-                    }
-                }
-            });
-
-            paystub.totalDeduction = paystub.withholding + paystub.employeeSS + paystub.employeeMedicare + paystub.cashAdvance + paystub.loan;
-            paystub.netPay = paystub.totalPay - paystub.totalDeduction;
-
-            EmployeeRepository.saveAll($scope.employees, function() { $scope.paystubSaved = true; });
-        }
-    };
-
-    $scope.calculatePayrollTotals = function() {
-        angular.forEach($scope.stores, function(store, index) {
-            var total = { regularPay:0, benefitPay:0, incentivePay: 0, commission: 0, totalPay: 0, employeeSS:0,
-                employeeMedicare: 0, withholding: 0, loan: 0, netPay: 0 };
-
-            angular.forEach($scope.employees, function(employee, index) {
-                if (employee.storeId === store.id && employee.active) {
-                    var weekData = employee[$scope.weekEndingKey];
-                    if (weekData) {
-                        total.regularPay += weekData.paystub.regularPay;
-                        total.benefitPay += weekData.paystub.benefitPay;
-                        total.incentivePay += weekData.paystub.incentivePay;
-                        total.commission += weekData.paystub.commission;
-                        total.totalPay += weekData.paystub.totalPay;
-                        total.employeeSS += weekData.paystub.employeeSS;
-                        total.employeeMedicare += weekData.paystub.employeeMedicare;
-                        total.withholding += weekData.paystub.withholding;
-                        total.loan += weekData.paystub.loan;
-                        total.netPay += weekData.paystub.netPay;
-                    }
-                }
-            });
-
-            store[$scope.weekEndingKey] = {};
-            store[$scope.weekEndingKey].totals = total;
-        });
-    };
+// End observers
 
 // Begin methods for weekly summary page
 
@@ -485,55 +385,22 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
 
 // End methods for yearly summary page.
 
-    $scope.selectWithholdingType = function(code) {
-        var result = null;
-
-        if (code && $scope.withholdingTypes) {
-            angular.forEach($scope.withholdingTypes, function(withholdingType, index) {
-                if (code === withholdingType.type) {
-                    result = withholdingType;
-                }
-            });
-        }
-        return result;
-    };
-
-    $scope.selectEmployee = function(employee) {
-        if (employee) {
-            if (!employee[$scope.weekEndingKey]) {
-                employee[$scope.weekEndingKey] = {
-                    timesheet: {
-                        sun: { am:false, pm:false, eve:false },
-                        mon: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
-                        tue: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
-                        wed: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
-                        thu: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
-                        fri: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
-                        sat: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
-                        sickDays: 0, vacationDays: 0, commission: 0, cashAdvance: 0},
-                    paystub: {}
-                };
-            }
-            $scope.employee = employee;
-            $scope.timesheet = employee[$scope.weekEndingKey].timesheet;
-            $scope.paystub = employee[$scope.weekEndingKey].paystub;
-        }
-    };
-
+// Begin startup methods.
     $scope.loadGeneralSetupData = function() {
         GeneralSetupRepository.getData()
-            .then(function(result){
-                $scope.generalSetup = result;
-
+            .then(function(result) {
                 if (!result.application) {
                     result.application = {};
                 }
-                var currentPayPeriod = $scope.application[$scope.weekEndingKey];
+                var currentPayPeriod = $scope.generalSetup ? $scope.generalSetup.application[$scope.weekEndingKey] : null;
                 if (!result.application[$scope.weekEndingKey] && currentPayPeriod) {
                     result.application[$scope.weekEndingKey] = currentPayPeriod;
                 }
+                $scope.generalSetup = result;
 
-                $scope.application = result.application;
+                if (!currentPayPeriod) {
+                    $scope.updatePayweekInfo();
+                }
             }, function() { alert("Error loading General Setup data.")});
     };
 
@@ -616,8 +483,207 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         $scope.loadStores(function() { if ($scope.stores && $scope.employees) { $scope.calculatePayrollTotals(); }});
     }, 500);
 
+// End startup methods
+
+// Begin main page functions
+    $scope.updatePayweekInfo = function() {
+        if ($scope.generalSetup) {
+            if (!$scope.generalSetup.application) {
+                $scope.generalSetup.application = {};
+            }
+            if (!$scope.generalSetup.application[$scope.weekEndingKey]) {
+                $scope.generalSetup.application[$scope.weekEndingKey] = { payDays: 0, holidays: {} };
+            }
+            var weekEnding = new Date($scope.weekEnding.getTime());
+            var firstOfMonth = new Date($scope.weekEnding.getTime());
+            firstOfMonth.setDate(1);
+            var dayOfFirst = firstOfMonth.getDay();
+            var month = weekEnding.getMonth();
+            var endOfMonth = new Date();
+            var daysInMonth = 28;
+            for (var i = 31; i > 28; i--) {
+                endOfMonth.setTime($scope.weekEnding.getTime());
+                endOfMonth.setDate(i);
+                if (month == endOfMonth.getMonth()) {
+                    daysInMonth = i;
+                    break;
+                }
+            }
+
+            var daysAfterFirstPayday = daysInMonth - (7 - dayOfFirst);
+            if (daysAfterFirstPayday > 27) {
+                $scope.generalSetup.application[$scope.weekEndingKey].payDays = 5;
+            } else {
+                $scope.generalSetup.application[$scope.weekEndingKey].payDays = 4;
+            }
+
+            $scope.selectEmployee($scope.employee);
+        }
+    };
+
+    $scope.exportData= function() {
+        var data = {};
+        data.generalSetup = $scope.generalSetup;
+        data.withholdingTypes = $scope.withholdingTypes;
+        data.employees = $scope.employees;
+        data.withholdingCriteria = $scope.withholdingCriteria;
+        data.socialSecurityCriteria = $scope.socialSecurityCriteria;
+        data.medicareCriteria = $scope.medicareCriteria;
+        data.stores = $scope.stores;
+
+        var pom = document.createElement('a');
+        pom.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data)));
+        pom.setAttribute('download', 'payroll.json');
+        pom.click();
+    };
+
+    $scope.importData = function(data) {
+        if (data.generalSetup) {
+            $scope.generalSetup = data.generalSetup;
+            GeneralSetupRepository.saveData(data.generalSetup);
+        }
+        if (data.stores) {
+            $scope.stores = data.stores;
+            StoreRepository.saveStores(data.stores);
+        }
+        if (data.withholdingTypes) {
+            $scope.withholdingTypes = data.withholdingTypes;
+            WithholdingTypesRepository.saveAll(data.withholdingTypes);
+        }
+        if (data.employees) {
+            $scope.employees = data.employees;
+            EmployeeRepository.saveAll(data.employees);
+        }
+        if (data.withholdingCriteria){
+            $scope.withholdingCriteria = data.withholdingCriteria;
+            WithholdingRepository.saveAll(data.withholdingCriteria);
+        }
+        if (data.socialSecurityCriteria) {
+            $scope.socialSecurityCriteria = data.socialSecurityCriteria;
+            SocialSecurityRepository.saveAll(data.socialSecurityCriteria);
+        }
+        if (data.medicareCriteria) {
+            $scope.medicareCriteria = data.medicareCriteria;
+            MedicareRepository.saveAll(data.medicareCriteria);
+        }
+    };
+
+    $scope.calculatePay = function() {
+        var timesheet = $scope.timesheet;
+        var paystub = $scope.paystub;
+        var employee = $scope.employee;
+        var generalSetup = $scope.generalSetup;
+        var weekInfo = $scope.generalSetup.application[PayrollUtils.getKeyFromDate($scope.weekEnding)];
+
+        if (timesheet && paystub && employee) {
+            $scope.paystubSaved = false;
+            paystub.daysOfWork = 0;
+            paystub.regularPay = 0;
+            paystub.overtimePay = 0;
+            paystub.commission = timesheet.commission ? parseFloat(timesheet.commission) : 0;
+            paystub.cashAdvance = timesheet.cashAdvance ? parseFloat(timesheet.cashAdvance) : 0;
+            PayrollUtils.calculateIncentivePay(employee, timesheet, paystub);
+            PayrollUtils.calculateDayPay('mon', employee, timesheet, paystub, generalSetup, weekInfo);
+            PayrollUtils.calculateDayPay('tue', employee, timesheet, paystub, generalSetup, weekInfo);
+            PayrollUtils.calculateDayPay('wed', employee, timesheet, paystub, generalSetup, weekInfo);
+            PayrollUtils.calculateDayPay('thu', employee, timesheet, paystub, generalSetup, weekInfo);
+            PayrollUtils.calculateDayPay('fri', employee, timesheet, paystub, generalSetup, weekInfo);
+            PayrollUtils.calculateDayPay('sat', employee, timesheet, paystub, generalSetup, weekInfo);
+            PayrollUtils.calculateOvertimePay(employee, paystub, generalSetup);
+            PayrollUtils.calculateSundayPay(employee, timesheet, paystub, generalSetup);
+            PayrollUtils.calculateBenefitPay(employee, timesheet, paystub, generalSetup);
+
+            paystub.subtotalPay = paystub.regularPay + paystub.overtimePay + paystub.benefitPay + paystub.incentivePay
+                + paystub.commission;
+            paystub.totalPay = paystub.subtotalPay + paystub.sundayPay + paystub.sundayIncentive;
+
+            PayrollUtils.calculateWithholding($filter, $scope.withholdingCriteria, employee, paystub);
+            PayrollUtils.calculateSocialSecurity($filter, $scope.socialSecurityCriteria, paystub, $scope);
+            PayrollUtils.calculateMedicare($filter, $scope.medicareCriteria, paystub, $scope);
+
+            // Calculate Loan
+            paystub.loan = 0;
+            angular.forEach(employee.loans, function(loan) {
+                if (loan.startDate && loan.payment && loan.endDate) {
+                    if (PayrollUtils.getTimelessDate(loan.startDate).getTime() <= PayrollUtils.getTimelessDate($scope.weekEnding)
+                        && PayrollUtils.getTimelessDate(loan.endDate).getTime() >= PayrollUtils.getTimelessDate($scope.weekEnding)) {
+                        paystub.loan += loan.payment;
+                    }
+                }
+            });
+
+            paystub.totalDeduction = paystub.withholding + paystub.employeeSS + paystub.employeeMedicare + paystub.cashAdvance + paystub.loan;
+            paystub.netPay = paystub.totalPay - paystub.totalDeduction;
+
+            EmployeeRepository.saveAll($scope.employees, function() { $scope.paystubSaved = true; });
+        }
+    };
+
+    $scope.calculatePayrollTotals = function() {
+        angular.forEach($scope.stores, function(store, index) {
+            var total = { regularPay:0, benefitPay:0, incentivePay: 0, commission: 0, totalPay: 0, employeeSS:0,
+                employeeMedicare: 0, withholding: 0, loan: 0, netPay: 0 };
+
+            angular.forEach($scope.employees, function(employee, index) {
+                if (employee.storeId === store.id && employee.active) {
+                    var weekData = employee[$scope.weekEndingKey];
+                    if (weekData) {
+                        total.regularPay += weekData.paystub.regularPay;
+                        total.benefitPay += weekData.paystub.benefitPay;
+                        total.incentivePay += weekData.paystub.incentivePay;
+                        total.commission += weekData.paystub.commission;
+                        total.totalPay += weekData.paystub.totalPay;
+                        total.employeeSS += weekData.paystub.employeeSS;
+                        total.employeeMedicare += weekData.paystub.employeeMedicare;
+                        total.withholding += weekData.paystub.withholding;
+                        total.loan += weekData.paystub.loan;
+                        total.netPay += weekData.paystub.netPay;
+                    }
+                }
+            });
+
+            store[$scope.weekEndingKey] = {};
+            store[$scope.weekEndingKey].totals = total;
+        });
+    };
+
+    $scope.selectWithholdingType = function(code) {
+        var result = null;
+
+        if (code && $scope.withholdingTypes) {
+            angular.forEach($scope.withholdingTypes, function(withholdingType, index) {
+                if (code === withholdingType.type) {
+                    result = withholdingType;
+                }
+            });
+        }
+        return result;
+    };
+
+    $scope.selectEmployee = function(employee) {
+        if (employee) {
+            if (!employee[$scope.weekEndingKey]) {
+                employee[$scope.weekEndingKey] = {
+                    timesheet: {
+                        sun: { am:false, pm:false, eve:false },
+                        mon: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+                        tue: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+                        wed: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+                        thu: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+                        fri: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+                        sat: { amIn:'', amOut:'', pmIn:'', pmOut:'', eveIn: '', eveOut:'' },
+                        sickDays: 0, vacationDays: 0, commission: 0, cashAdvance: 0},
+                    paystub: {}
+                };
+            }
+            $scope.employee = employee;
+            $scope.timesheet = employee[$scope.weekEndingKey].timesheet;
+            $scope.paystub = employee[$scope.weekEndingKey].paystub;
+        }
+    };
+
     $scope.toggleHoliday = function(day) {
-        var value = $scope.application[PayrollUtils.getKeyFromDate($scope.weekEnding)].holidays[day];
+        var value = $scope.generalSetup.application[PayrollUtils.getKeyFromDate($scope.weekEnding)].holidays[day];
         if (!value) {
             value = 1;
         } else if (value >= (PayrollConstants.holidays.length - 1)) {
@@ -626,7 +692,7 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
             value++;
         }
 
-        $scope.application[PayrollUtils.getKeyFromDate($scope.weekEnding)].holidays[day] = value;
+        $scope.generalSetup.application[PayrollUtils.getKeyFromDate($scope.weekEnding)].holidays[day] = value;
     };
 
 
@@ -634,6 +700,18 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         return ( mode === 'day' && ( date.getDay() < 6 ) );
     };
 
+    $scope.importDialogOptions = {
+        backdrop: true,
+        keyboard: false,
+        backdropClick: false,
+        templateUrl: 'import.html',
+        controller: 'ImportController'
+    };
+
+    $scope.showImportDialog = function() {
+        var d = $dialog.dialog($scope.importDialogOptions);
+        d.open();
+    }
 
     $scope.generalSetupDialogOptions = {
         backdrop: true,
@@ -733,6 +811,8 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         var d = $dialog.dialog($scope.storeDialogOptions);
         d.open();
     };
+
+// End main page functions
 });
 
 payrollModule.config(['$locationProvider',
@@ -757,6 +837,7 @@ payrollModule.controller('WithholdingTypesController', WithholdingTypesControlle
 payrollModule.controller('MedicareController', MedicareController);
 payrollModule.controller('WithholdingController', WithholdingController);
 payrollModule.controller('EmployeeController', EmployeeController);
+payrollModule.controller('ImportController', ImportController);
 
 payrollModule.controller('EmployeeListController', EmployeeListController);
 
