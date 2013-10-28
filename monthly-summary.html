@@ -15,7 +15,7 @@
     <script src="js/social-security.js"></script>
     <script src="js/general-setup.js"></script>
     <script src="js/store.js"></script>
-    <script src="js/store.js"></script>
+    <script src="js/import-data.js"></script>
     <script src="js/data-service.js"></script>
     <script src="js/payroll.js"></script>
     <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
@@ -40,12 +40,12 @@
             </thead>
             <tbody>
                 <tr>
-                    <td colspan="3"><strong>Gross Pay Summary: {{ weekEnding | date:'MMMM' }}</strong></td>
+                    <td colspan="3"><strong>Gross Pay Summary:</strong><span class="h4"> {{ weekEnding | date:'MMMM, yyyy' }}</span></td>
                 </tr>
-                <tr ng-repeat="employee in employees | filter:{'storeId':store.id}"">
+                <tr ng-repeat="employee in employees | filter:{'storeId':store.id}">
                     <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
                     <td>
-                        <span class="pull-right">{{ calculateMonthlyTotal(employee, weekEnding, 'totalPay') | currency }}</span>
+                        <span class="pull-right">{{ calculateMonthlyTotal(employee, weekEnding, 'subtotalPay') | currency }}</span>
                     </td>
                     <td>
 
@@ -54,13 +54,13 @@
                 <tr>
                     <td><strong>Total</strong></td>
                     <td>
-                        <strong class="pull-right">{{ calculateMonthlyTotal(store.id, weekEnding, 'totalPay') | currency }}</strong>
+                        <strong class="pull-right">{{ calculateMonthlyTotal(store.id, weekEnding, 'subtotalPay') | currency }}</strong>
                     </td>
                     <td>
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="3"><strong>Withholding Tax Paid Summary: {{ weekEnding | date:'MMMM' }}</strong></td>
+                    <td colspan="3"><strong>Withholding Tax Paid Summary:</strong><span class="h4"> {{ weekEnding | date:'MMMM, yyyy' }}</span></td>
                 </tr>
                 <tr ng-repeat="employee in employees | filter:{'storeId':store.id}">
                     <td>{{ employee.lastName }}, {{ employee.firstName }}</td>

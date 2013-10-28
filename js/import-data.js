@@ -2,7 +2,6 @@
  * Created by ewkoenw on 10/26/13.
  */
 function ImportController($scope, $rootScope, dialog) {
-    $scope.filename;
     $scope.file;
 
     $scope.import = function () {
@@ -21,7 +20,6 @@ function ImportController($scope, $rootScope, dialog) {
 
     $scope.filenameChanged = function(selector) {
         if (selector.files && selector.files.length > 0) {
-            $scope.filename = selector.files[0].name;
             $scope.file = selector.files[0];
             if (!$scope.$$phase) { $scope.$digest(); }
         }

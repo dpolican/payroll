@@ -8,8 +8,6 @@
 function StoreController($scope, dialog, StoreRepository) {
     $scope.stores = [];
 
-
-
     StoreRepository.getStores()
         .then(function(result){
             $scope.stores = result;

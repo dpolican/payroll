@@ -246,10 +246,6 @@ function EmployeeController($scope, $rootScope, dialog, EmployeeRepository, Stor
         return null;
     };
 
-    $scope.print = function() {
-
-    };
-
     $scope.save = function() {
         var maxId = $scope.determineNextId();
         angular.forEach($scope.records, function(record) {

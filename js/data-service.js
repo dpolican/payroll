@@ -89,13 +89,6 @@ function DataService() {
         vacationDays: 'vacation_days'
     };
 
-    var storeTable = {
-        tableName: 'store',
-        id: 'id',
-        name: 'name',
-        address: 'address'
-    };
-
     var init = function() {
     };
 
@@ -126,17 +119,10 @@ function DataService() {
                     generalSetupTable.specialHolidayFactor + " REAL NOT NULL, " +
                     generalSetupTable.sickDays + " REAL NOT NULL, " +
                     generalSetupTable.vacationDays + " REAL NOT NULL);");
-
-            transaction.executeSql(
-            "CREATE TABLE IF NOT EXISTS " + storeTable.tableName + "(" +
-                storeTable.id + " INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
-                storeTable.name + " TEXT NOT NULL, " +
-                storeTable.address + " TEXT NOT NULL);");
     });
 
     return {
         generalSetupTable: generalSetupTable,
-        storeTable: storeTable,
         exec: function(task, successhandler, errorhandler) {
             db.transaction( task, errorhandler, successhandler);
             return false;

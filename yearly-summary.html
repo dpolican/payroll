@@ -14,7 +14,7 @@
     <script src="js/withholding-types.js"></script>
     <script src="js/social-security.js"></script>
     <script src="js/general-setup.js"></script>
-    <script src="js/store.js"></script>
+    <script src="js/import-data.js"></script>
     <script src="js/store.js"></script>
     <script src="js/data-service.js"></script>
     <script src="js/payroll.js"></script>
@@ -57,7 +57,7 @@
             <tbody>
             <tr ng-repeat="employee in employees | filter:{'storeId':store.id}">
                 <td>{{ employee.lastName }}, {{ employee.firstName }}</td>
-                <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'regularPay') | currency }}</span></td>
+                <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, ['regularPay', 'overtimePay']) | currency }}</span></td>
                 <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'benefitPay') | currency }}</span></td>
                 <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'incentivePay') | currency }}</span></td>
                 <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'commission') | currency }}</span></td>
@@ -66,13 +66,13 @@
                 <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'employeeMedicare') | currency }}</span></td>
                 <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'withholding') | currency }}</span></td>
                 <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'loan') | currency }}</span></td>
-                <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'netPay') | currency }}</span></td>
+                <td><span class="pull-right">{{ calculateYearlyTotal(employee, weekEnding, 'subtotalPay') -  calculateYearlyTotal(employee, weekEnding, ['employeeSS', 'employeeMedicare', 'withholding', 'loan']) | currency }}</span></td>
             </tr>
             </tbody>
             <tfoot>
             <tr>
                 <th>Totals</th>
-                <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'regularPay') | currency }}</span></th>
+                <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, ['regularPay', 'overtimePay']) | currency }}</span></th>
                 <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'benefitPay') | currency }}</span></th>
                 <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'incentivePay') | currency }}</span></th>
                 <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'commission') | currency }}</span></th>
@@ -81,7 +81,7 @@
                 <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'employeeMedicare') | currency }}</span></th>
                 <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'withholding') | currency }}</span></th>
                 <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'loan') | currency }}</span></th>
-                <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'netPay') | currency }}</span></th>
+                <th><span class="pull-right">{{ calculateYearlyTotal(store.id, weekEnding, 'subtotalPay') - calculateYearlyTotal(store.id, weekEnding, ['employeeSS', 'employeeMedicare', 'withholding', 'loan']) | currency }}</span></th>
             </tr>
             </tfoot>
         </table>

@@ -15,7 +15,6 @@
 <script src="js/social-security.js"></script>
 <script src="js/general-setup.js"></script>
 <script src="js/store.js"></script>
-<script src="js/store.js"></script>
 <script src="js/import-data.js"></script>
 <script src="js/data-service.js"></script>
 <script src="js/payroll.js"></script>
@@ -25,8 +24,8 @@
         <div class="modal-body">
             <div class="text-center">
             <div class="input-append">
-                <input ng-show="filename" class="span5 uneditable-input" ng-model="filename"/>
-                <input ng-hide="filename" class="span5 uneditable-input" value="No file selected."/>
+                <input ng-show="file" class="span5 uneditable-input" ng-model="file.name"/>
+                <input ng-hide="file" class="span5 uneditable-input" value="No file selected."/>
                 <button class="btn btn-default btn-file">
                     Select File <input type="file" name="filename" onchange="angular.element(this).scope().filenameChanged(this)">
                 </button>
@@ -288,7 +287,6 @@
                     <select class="span4" ng-model="record"
                             ng-options="(record.lastName + ', ' + record.firstName) for record in records" ng-disabled="employeeForm.$invalid"></select>
                     <button class="btn" ng-click="delete()"tooltip-placement="bottom" tooltip="Delete employee record">Delete</button>
-                    <button class="btn" ng-click="print()"tooltip-placement="bottom" tooltip="Print employee record">Print</button>
                 </div>
                 <button class="btn" ng-click="add()" tooltip-placement="bottom" tooltip="Add employee record"><i class="icon-plus"></i> Add</button>
             </div>
@@ -350,13 +348,13 @@
 
                         <div class="controls">
                             <div class="btn-group">
-                                <button type="button" class="btn btn-small btn-info" ng-model="record.processWithholding"
+                                <button type="button" ng-class="{ 'btn': true, 'btn-small': true, 'btn-info': record.processWithholding}" ng-model="record.processWithholding"
                                         btn-checkbox>Withholding
                                 </button>
-                                <button type="button" class="btn btn-small btn-info" ng-model="record.processMedicare"
+                                <button type="button" ng-class="{ 'btn': true, 'btn-small': true, 'btn-info': record.processMedicare}" ng-model="record.processMedicare"
                                         btn-checkbox>Medicare
                                 </button>
-                                <button type="button" class="btn btn-small btn-info" ng-model="record.processSocialSecurity"
+                                <button type="button" ng-class="{ 'btn': true, 'btn-small': true, 'btn-info': record.processSocialSecurity}" ng-model="record.processSocialSecurity"
                                         btn-checkbox>SSS
                                 </button>
                             </div>

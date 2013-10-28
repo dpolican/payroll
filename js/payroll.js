@@ -35,6 +35,11 @@ var PayrollUtils = {
     },
 
     getTimelessDate: function(date) {
+        if (angular.isString(date)) {
+            var millis = Date.parse(date);
+            date = new Date();
+            date.setTime(millis);
+        }
         if (angular.isDate(date)) {
             var timelessDate = new Date(date.getTime());
             timelessDate.setHours(0);
@@ -299,8 +304,47 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
 // End observers
 
 // Begin methods for weekly summary page
+    $scope.calculateWeeklyTotal = function(employeeOrStoreId, weekEnding, properties) {
+        var employees = [];
+        if (typeof(employeeOrStoreId) === "number") {
+            var storeId = employeeOrStoreId;
 
-    $scope.calculateMonthlyTotal = function(employeeOrStoreId, weekEnding, property) {
+            angular.forEach($scope.employees, function(employee) {
+                if (employee.storeId === storeId) {
+                    this.push(employee);
+                }
+            }, employees);
+        } else {
+            employees.push(employeeOrStoreId);
+        }
+
+        var payday = new Date();
+        payday.setTime(weekEnding.getTime());
+
+        var fields = angular.isString(properties) ? [properties] : properties;
+
+        var runningTotal = 0;
+
+        var key = PayrollUtils.getKeyFromDate(payday);
+
+        angular.forEach(employees, function(employee) {
+            if (employee && employee[key] && employee[key].paystub) {
+                angular.forEach(fields, function(field) {
+                    if (employee[key].paystub[field]) {
+                        runningTotal += employee[key].paystub[field];
+                    }
+                });
+            }
+        });
+
+        payday.setDate(payday.getDate() + 7);
+
+        return runningTotal;
+    };
+// End methods for weekly summary page
+
+// Begin methods for monthly summary page
+    $scope.calculateMonthlyTotal = function(employeeOrStoreId, weekEnding, properties) {
         var employees = [];
         if (typeof(employeeOrStoreId) === "number") {
             var storeId = employeeOrStoreId;
@@ -319,13 +363,19 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         var paymonth = payday.getMonth();
         payday.setDate(payday.getDate() % 7);
 
+        var fields = angular.isString(properties) ? [properties] : properties;
+
         var runningTotal = 0;
         do {
             var key = PayrollUtils.getKeyFromDate(payday);
 
             angular.forEach(employees, function(employee) {
-                if (employee[key] && employee[key].paystub && employee[key].paystub[property]) {
-                    runningTotal += employee[key].paystub[property];
+                if (employee && employee[key] && employee[key].paystub) {
+                    angular.forEach(fields, function(field) {
+                        if (employee[key].paystub[field]) {
+                            runningTotal += employee[key].paystub[field];
+                        }
+                    });
                 }
             });
 
@@ -334,11 +384,11 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         return runningTotal;
     };
 
-// End methods for weekly summary page.
+// End methods for monthly summary page.
 
 // Begin methods for yearly summary page.
 
-    $scope.calculateYearlyTotal = function(employeeOrStoreId, weekEnding, property) {
+    $scope.calculateYearlyTotal = function(employeeOrStoreId, weekEnding, properties) {
         var employees = [];
         if (typeof(employeeOrStoreId) === "number") {
             var storeId = employeeOrStoreId;
@@ -368,13 +418,19 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
             payday.setDate(1 + diff);
         }
 
+        var fields = angular.isString(properties) ? [properties] : properties;
+
         var runningTotal = 0;
         do {
             var key = PayrollUtils.getKeyFromDate(payday);
 
             angular.forEach(employees, function(employee) {
-                if (employee[key] && employee[key].paystub && employee[key].paystub[property]) {
-                    runningTotal += employee[key].paystub[property];
+                if (employee && employee[key] && employee[key].paystub) {
+                    angular.forEach(fields, function(field) {
+                        if (employee[key].paystub[field]) {
+                            runningTotal += employee[key].paystub[field];
+                        }
+                    });
                 }
             });
 
@@ -467,10 +523,6 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
                 })
             }
         }
-
-        if ($scope.employees && $scope.stores) {
-            $scope.calculatePayrollTotals();
-        }
     };
 
     setTimeout(function() {
@@ -480,7 +532,7 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         $scope.loadMedicareData();
         $scope.loadEmployeeList($scope.initializeParams);
         $scope.loadWithholdingTypes();
-        $scope.loadStores(function() { if ($scope.stores && $scope.employees) { $scope.calculatePayrollTotals(); }});
+        $scope.loadStores();
     }, 500);
 
 // End startup methods
@@ -617,34 +669,6 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
 
             EmployeeRepository.saveAll($scope.employees, function() { $scope.paystubSaved = true; });
         }
-    };
-
-    $scope.calculatePayrollTotals = function() {
-        angular.forEach($scope.stores, function(store, index) {
-            var total = { regularPay:0, benefitPay:0, incentivePay: 0, commission: 0, totalPay: 0, employeeSS:0,
-                employeeMedicare: 0, withholding: 0, loan: 0, netPay: 0 };
-
-            angular.forEach($scope.employees, function(employee, index) {
-                if (employee.storeId === store.id && employee.active) {
-                    var weekData = employee[$scope.weekEndingKey];
-                    if (weekData) {
-                        total.regularPay += weekData.paystub.regularPay;
-                        total.benefitPay += weekData.paystub.benefitPay;
-                        total.incentivePay += weekData.paystub.incentivePay;
-                        total.commission += weekData.paystub.commission;
-                        total.totalPay += weekData.paystub.totalPay;
-                        total.employeeSS += weekData.paystub.employeeSS;
-                        total.employeeMedicare += weekData.paystub.employeeMedicare;
-                        total.withholding += weekData.paystub.withholding;
-                        total.loan += weekData.paystub.loan;
-                        total.netPay += weekData.paystub.netPay;
-                    }
-                }
-            });
-
-            store[$scope.weekEndingKey] = {};
-            store[$scope.weekEndingKey].totals = total;
-        });
     };
 
     $scope.selectWithholdingType = function(code) {
