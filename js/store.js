@@ -5,7 +5,7 @@
  * Time: 5:34 PM
  * To change this template use File | Settings | File Templates.
  */
-function StoreController($scope, dialog, StoreRepository) {
+function StoreController($scope, $rootScope, dialog, StoreRepository) {
     $scope.stores = [];
 
     StoreRepository.getStores()
@@ -18,7 +18,9 @@ function StoreController($scope, dialog, StoreRepository) {
         dialog.close();
     };
     $scope.save = function() {
-        StoreRepository.saveStores($scope.stores);
+        StoreRepository.saveStores($scope.stores, function() {
+            $rootScope.$broadcast(PayrollConstants.storeUpdateEvent);
+        });
         dialog.close();
     };
 
@@ -41,7 +43,7 @@ function StoreRepository(DataService, $q, $rootScope) {
     var getStores = function() {
         var delay = $q.defer();
         var errorHandler = function(error) {
-            delay.reject('Error retrieving social security records Error was ' + error.message + ' (Code ' + error.code + ')');
+            delay.reject('Error retrieving store records Error was ' + error.message + ' (Code ' + error.code + ')');
             return false;
         };
         var successHandler = function (result) {
@@ -60,7 +62,7 @@ function StoreRepository(DataService, $q, $rootScope) {
         return delay.promise;
     };
 
-    var saveStores = function(updatedRecords) {
+    var saveStores = function(updatedRecords, successHandler) {
         var recordsToSave = updatedRecords;
         var ids = [];
 
@@ -85,6 +87,10 @@ function StoreRepository(DataService, $q, $rootScope) {
         });
 
         stores = angular.copy(updatedRecords);
+
+        if (successHandler) {
+            successHandler();
+        }
     };
 
     return {

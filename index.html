@@ -246,30 +246,30 @@
     <div>
         <div class="modal-header"><h3>Stores</h3></div>
         <div class="modal-body">
-            <div ng-repeat="store in stores" class="form-horizontal">
-                <div class="control-group">
-                    <label class="control-label small-label">Name</label>
-
-                    <div class="controls small-controls">
-                        <input type="text" ng-model="store.name" class="span6" required>
+            <form class="form" name="storeForm">
+                <div ng-repeat="store in stores" class="form-horizontal">
+                    <div class="control-group">
+                        <label class="control-label small-label">Name</label>
+                        <div class="controls small-controls">
+                            <input type="text" ng-model="store.name" class="span6" required/>
+                        </div>
                     </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label small-label">Address</label>
-
-                    <div class="controls small-controls">
-                        <input type="text" ng-model="store.address" class="span6" required>
+                    <div class="control-group">
+                        <label class="control-label small-label">Address</label>
+                        <div class="controls small-controls">
+                            <input type="text" ng-model="store.address" class="span6" required/>
+                        </div>
                     </div>
+                    <span ng-show="!$last"><hr/></span>
                 </div>
-                <span ng-show=" ! $last "><hr></span>
-            </div>
+            </form>
         </div>
         <div class="modal-footer">
             <div class="pull-left">
                 <button class="btn" ng-click="addStore()"><i class="icon-plus"></i> Add Store</button>
                 <button class="btn" ng-click="deleteStore()"><i class="icon-minus"></i> Delete Store</button>
             </div>
-            <button class="offset1 btn btn-success" ng-click="save()">Save</button>
+            <button class="offset1 btn btn-success" ng-click="save()" ng-disabled="storeForm.$invalid">Save</button>
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </div>
@@ -383,7 +383,7 @@
                             <div class="control-group">
                                 <label class="control-label small-label">Sick Days</label>
                                 <div class="controls small-controls">
-                                    <input type="number" step="0.5" class="input-mini" ng-model="record.sickDays"/>
+                                    <input type="number" step="0.5" class="input-mini" ng-model="record.sickDays" required/>
                                 </div>
                             </div>
                         </div>
@@ -405,7 +405,7 @@
                             <div class="control-group">
                                 <label class="control-label small-label">Vacation Days</label>
                                 <div class="controls small-controls">
-                                    <input type="number" step="0.5" class="input-mini" ng-model="record.vacationDays"/>
+                                    <input type="number" step="0.5" class="input-mini" ng-model="record.vacationDays" required/>
                                 </div>
                             </div>
                         </div>
@@ -484,7 +484,6 @@
             </tab>
         </tabset>
     </form>
-
 </div>
 <div class="modal-footer">
     <button class="offset1 btn btn-success" ng-click="save()" ng-disabled="employeeForm.$invalid">Save</button>

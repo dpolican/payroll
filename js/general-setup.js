@@ -101,36 +101,6 @@ function GeneralSetupRepository(DataService, $q, $rootScope) {
             delay.resolve(data);
         } else {
             DataService.payrollDB.getAll(successHandler, errorHandler);
-            /*
-            DataService.exec(function (transaction) {
-                transaction.executeSql(
-                    "SELECT * from " + DataService.generalSetupTable.tableName + " where " + DataService.generalSetupTable.id + " = ?", [1], function (transaction, result) {
-                        var record = defaultData;
-                        if (result.rows.length > 0) {
-                            var row = result.rows.item(0);
-                            record.id = row[DataService.generalSetupTable.id];
-                            record.paydayWeekday = convertToWeekdayString(row[DataService.generalSetupTable.paydayWeekday]);
-                            record.amIn = row[DataService.generalSetupTable.amIn];
-                            record.amOut = row[DataService.generalSetupTable.amOut];
-                            record.pmIn = row[DataService.generalSetupTable.pmIn];
-                            record.pmOut = row[DataService.generalSetupTable.pmOut];
-                            record.regularHours = row[DataService.generalSetupTable.regularHours];
-                            record.paySchedule = convertToPayScheduleString([DataService.generalSetupTable.paySchedule]);
-                            record.incentivePay = row[DataService.generalSetupTable.incentivePay];
-                            record.sundayIncentive = row[DataService.generalSetupTable.sundayIncentive];
-                            record.overtimeFactor = row[DataService.generalSetupTable.overtimeFactor];
-                            record.legalHolidayFactor = row[DataService.generalSetupTable.legalHolidayFactor];
-                            record.specialHolidayFactor = row[DataService.generalSetupTable.specialHolidayFactor];
-                            record.sickDays = row[DataService.generalSetupTable.sickDays];
-                            record.vacationDays = row[DataService.generalSetupTable.vacationDays];
-                        }
-                        data = angular.copy(record);
-                        delay.resolve(record);
-                        $rootScope.$apply();
-                    }, errorHandler
-                );
-            });
-            */
         }
 
         return delay.promise;
@@ -150,105 +120,11 @@ function GeneralSetupRepository(DataService, $q, $rootScope) {
 
         DataService.payrollDB.put(recordToSave, function(id) { console.log("ID: " + id) }, errorHandler);
 
-        /*
-        var insertFunction = function(recordToSave) {
-            return function (transaction) {
-                transaction.executeSql(
-                    "insert into " + DataService.generalSetupTable.tableName
-                        + " (" + DataService.generalSetupTable.id + ", "
-                        + DataService.generalSetupTable.paydayWeekday + ", "
-                        + DataService.generalSetupTable.amIn + ", "
-                        + DataService.generalSetupTable.amOut + ", "
-                        + DataService.generalSetupTable.pmIn + ", "
-                        + DataService.generalSetupTable.pmOut + ", "
-                        + DataService.generalSetupTable.regularHours + ", "
-                        + DataService.generalSetupTable.paySchedule + ", "
-                        + DataService.generalSetupTable.incentivePay + ", "
-                        + DataService.generalSetupTable.sundayIncentive + ", "
-                        + DataService.generalSetupTable.overtimeFactor + ", "
-                        + DataService.generalSetupTable.legalHolidayFactor + ", "
-                        + DataService.generalSetupTable.specialHolidayFactor + ", "
-                        + DataService.generalSetupTable.sickDays + ", "
-                        + DataService.generalSetupTable.vacationDays
-                        + ") values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-                    [   recordToSave.id,
-                        getWeekdayIndex(recordToSave.paydayWeekday),
-                        recordToSave.amIn,
-                        recordToSave.amOut,
-                        recordToSave.pmIn,
-                        recordToSave.pmOut,
-                        recordToSave.regularHours,
-                        getPayScheduleIndex(recordToSave.paySchedule),
-                        recordToSave.incentivePay,
-                        recordToSave.sundayIncentive,
-                        recordToSave.overtimeFactor,
-                        recordToSave.legalHolidayFactor,
-                        recordToSave.specialHolidayFactor,
-                        recordToSave.sickDays,
-                        recordToSave.vacationDays
-                    ],
-                    function () {
-                    },
-                    errorHandler
-                );
-            }
-        };
-
-        var updateFunction = function(recordToSave) {
-            return function (transaction) {
-                transaction.executeSql(
-                    "update " + DataService.generalSetupTable.tableName
-                        + " set " + DataService.generalSetupTable.paydayWeekday + " = ?, "
-                        + DataService.generalSetupTable.amIn + " = ?, "
-                        + DataService.generalSetupTable.amOut + " = ?, "
-                        + DataService.generalSetupTable.pmIn + " = ?, "
-                        + DataService.generalSetupTable.pmOut + " = ?, "
-                        + DataService.generalSetupTable.regularHours + " = ?, "
-                        + DataService.generalSetupTable.paySchedule + " = ?, "
-                        + DataService.generalSetupTable.incentivePay + " = ?, "
-                        + DataService.generalSetupTable.sundayIncentive + " = ?, "
-                        + DataService.generalSetupTable.overtimeFactor + " = ?, "
-                        + DataService.generalSetupTable.legalHolidayFactor + " = ?, "
-                        + DataService.generalSetupTable.specialHolidayFactor + " = ?, "
-                        + DataService.generalSetupTable.sickDays + " = ?, "
-                        + DataService.generalSetupTable.vacationDays + " = ? "
-                        + "where " + DataService.generalSetupTable.id + " = ?;",
-                    [getWeekdayIndex(recordToSave.paydayWeekday),
-                        recordToSave.amIn,
-                        recordToSave.amOut,
-                        recordToSave.pmIn,
-                        recordToSave.pmOut,
-                        recordToSave.regularHours,
-                        getPayScheduleIndex(recordToSave.paySchedule),
-                        recordToSave.incentivePay,
-                        recordToSave.sundayIncentive,
-                        recordToSave.overtimeFactor,
-                        recordToSave.legalHolidayFactor,
-                        recordToSave.specialHolidayFactor,
-                        recordToSave.sickDays,
-                        recordToSave.vacationDays,
-                        recordToSave.id],
-                    function () {
-                    },
-                    errorHandler
-                );
-            }
-        };
-
-        if (recordToSave.id == 0) {
-            recordToSave.id = 1;
-            DataService.exec(insertFunction(recordToSave));
-        } else {
-            DataService.exec(updateFunction(recordToSave));
-        }
-        */
-
         data = angular.copy(record);
         if (successHandler) {
             successHandler();
         }
     };
-
 
     return {
         getData: getData,

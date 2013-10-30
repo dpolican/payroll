@@ -6,7 +6,6 @@
  * To change this template use File | Settings | File Templates.
  */
 function DataService() {
-    var db = openDatabase("payroll", "1.0", "Payroll Database", 1024 * 1024);
     var employeeDbReady;
 
     var payrollDB = new IDBStore({
@@ -70,71 +69,25 @@ function DataService() {
         }
     });
 
-    var generalSetupTable = {
-        tableName: 'payroll_setup',
-        id: 'id',
-        paydayWeekday: 'payday_weekday',
-        amIn: 'am_in',
-        amOut: 'am_out',
-        pmIn: 'pm_in',
-        pmOut: 'pm_out',
-        regularHours: 'regular_hours',
-        paySchedule: 'pay_schedule',
-        incentivePay: 'incentive_pay',
-        sundayIncentive: 'sunday_incentive',
-        overtimeFactor: 'overtime_factor',
-        legalHolidayFactor: 'legal_holiday_factor',
-        specialHolidayFactor: 'special_holiday_factor',
-        sickDays: 'sick_days',
-        vacationDays: 'vacation_days'
-    };
-
-    var init = function() {
-    };
-
-        db.transaction(function(transaction) {
-            transaction.executeSql(
-                "CREATE TABLE IF NOT EXISTS social_security(" +
-                    " bracket INTEGER NOT NULL PRIMARY KEY, " +
-                    " salary REAL NOT NULL, " +
-                    " credit REAL NOT NULL, " +
-                    " employer_ss REAL NOT NULL, " +
-                    " employer_ec REAL NOT NULL, " +
-                    " employee_ss REAL NOT NULL);");
-
-            transaction.executeSql(
-                "CREATE TABLE IF NOT EXISTS " + generalSetupTable.tableName + " ( " +
-                    generalSetupTable.id + " INTEGER NOT NULL PRIMARY KEY, " +
-                    generalSetupTable.paydayWeekday + " INTEGER NOT NULL, " +
-                    generalSetupTable.amIn + " TEXT NOT NULL, " +
-                    generalSetupTable.amOut + " TEXT NOT NULL, " +
-                    generalSetupTable.pmIn + " TEXT NOT NULL, " +
-                    generalSetupTable.pmOut + " TEXT NOT NULL, " +
-                    generalSetupTable.regularHours + " REAL NOT NULL, " +
-                    generalSetupTable.paySchedule + " INTEGER NOT NULL, " +
-                    generalSetupTable.incentivePay + " REAL NOT NULL, " +
-                    generalSetupTable.sundayIncentive + " REAL NOT NULL, " +
-                    generalSetupTable.overtimeFactor + " REAL NOT NULL, " +
-                    generalSetupTable.legalHolidayFactor + " REAL NOT NULL, " +
-                    generalSetupTable.specialHolidayFactor + " REAL NOT NULL, " +
-                    generalSetupTable.sickDays + " REAL NOT NULL, " +
-                    generalSetupTable.vacationDays + " REAL NOT NULL);");
+    var socialSecurityDB = new IDBStore({
+        dbVersion: 1,
+        storeName: 'social-security',
+        keyPath: 'bracket',
+        autoIncrement: true,
+        onStoreReady: function(){
+            console.log("Social Security DB ready.");
+        }
     });
 
     return {
-        generalSetupTable: generalSetupTable,
-        exec: function(task, successhandler, errorhandler) {
-            db.transaction( task, errorhandler, successhandler);
-            return false;
-        },
-
         storeDB: storeDB,
         withholdingTypeDB: withholdingTypeDB,
         medicareDB: medicareDB,
         withholdingDB: withholdingDB,
         employeeDB: employeeDB,
-        employeeDbReady: function() { return employeeDbReady; },
         payrollDB: payrollDB,
-        init: init
+        socialSecurityDB: socialSecurityDB,
+        employeeDbReady: function() { return employeeDbReady; },
+        init: function() { }
     }
 }

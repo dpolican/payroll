@@ -16,9 +16,11 @@ var PayrollConstants = {
     monday: 'mon',
     employeeUpdatedEvent: 'employeeUpdate',
     withholdingUpdatedEvent: 'withholdingUpdate',
+    withholdingTypeUpdatedEvent: 'withholdingTypeUpdate',
     socialSecurityUpdatedEvent: 'socialSecurityUpdate',
     medicareUpdatedEvent: 'medicareUpdate',
     generalSetupUpdatedEvent: 'generalSetupUpdate',
+    storeUpdateEvent: 'storeUpdate',
     importEvent: 'importEvent'
 };
 
@@ -163,50 +165,53 @@ var PayrollUtils = {
     },
 
     calculateWithholding: function($filter, withholdingCriteria, employee, paystub) {
-        var filteredWithholdingCriteria = $filter('filter')(withholdingCriteria,
-            function (item) {
-                return (item.status === employee.withholdingType && parseFloat(item.salaryLimit) < paystub.subtotalPay);
-            });
-        filteredWithholdingCriteria = $filter('orderBy')(filteredWithholdingCriteria, function (item) {
-            return parseFloat(item.salaryLimit)
-        }, true);
-        var withholdingCriterium = filteredWithholdingCriteria.length > 0 ? filteredWithholdingCriteria[0] : null;
-        if (withholdingCriterium) {
-            paystub.withholding = (paystub.subtotalPay - parseFloat(withholdingCriterium.salaryLimit)) * parseFloat(withholdingCriterium.factor) + parseFloat(withholdingCriterium.base);
-        } else {
-            paystub.withholding = 0;
+        paystub.withholding = 0;
+        if (employee && employee.processWithholding) {
+            var filteredWithholdingCriteria = $filter('filter')(withholdingCriteria,
+                function (item) {
+                    return (item.status === employee.withholdingType && parseFloat(item.salaryLimit) < paystub.subtotalPay);
+                });
+            filteredWithholdingCriteria = $filter('orderBy')(filteredWithholdingCriteria, function (item) {
+                return parseFloat(item.salaryLimit)
+            }, true);
+            var withholdingCriterium = filteredWithholdingCriteria.length > 0 ? filteredWithholdingCriteria[0] : null;
+            if (withholdingCriterium) {
+                paystub.withholding = (paystub.subtotalPay - parseFloat(withholdingCriterium.salaryLimit)) * parseFloat(withholdingCriterium.factor) + parseFloat(withholdingCriterium.base);
+            }
         }
     },
 
-    calculateSocialSecurity: function($filter, socialSecurityCriteria, paystub, $scope) {
-        var filteredSocialSecurityCriteria = $filter('filter')(socialSecurityCriteria,
-            function (item) {
-                return (parseFloat(item.salary) < (paystub.subtotalPay * $scope.generalSetup.application[$scope.weekEndingKey].payDays));
-            });
-        filteredSocialSecurityCriteria = $filter('orderBy')(filteredSocialSecurityCriteria, function (item) {
-            return parseFloat(item.salary)
-        }, true);
-        var socialSecurityCriterium = filteredSocialSecurityCriteria.length > 0 ? filteredSocialSecurityCriteria[0] : null;
-        if (socialSecurityCriterium) {
-            paystub.employeeSS = socialSecurityCriterium.employeeSS / $scope.generalSetup.application[$scope.weekEndingKey].payDays;
-        } else {
-            paystub.employeeSS = 0;
+    calculateSocialSecurity: function($filter, socialSecurityCriteria, employee, paystub, $scope) {
+        paystub.employeeSS = 0;
+        if (employee && employee.processSocialSecurity) {
+            var filteredSocialSecurityCriteria = $filter('filter')(socialSecurityCriteria,
+                function (item) {
+                    return (parseFloat(item.salary) < (paystub.subtotalPay * $scope.generalSetup.application[$scope.weekEndingKey].payDays));
+                });
+            filteredSocialSecurityCriteria = $filter('orderBy')(filteredSocialSecurityCriteria, function (item) {
+                return parseFloat(item.salary)
+            }, true);
+            var socialSecurityCriterium = filteredSocialSecurityCriteria.length > 0 ? filteredSocialSecurityCriteria[0] : null;
+            if (socialSecurityCriterium) {
+                paystub.employeeSS = socialSecurityCriterium.employeeSS / $scope.generalSetup.application[$scope.weekEndingKey].payDays;
+            }
         }
     },
 
-    calculateMedicare: function($filter, medicareCriteria, paystub, $scope) {
-        var filteredMedicareCriteria = $filter('filter')(medicareCriteria,
-            function (item) {
-                return (parseFloat(item.from) < (paystub.subtotalPay * $scope.generalSetup.application[$scope.weekEndingKey].payDays));
-            });
-        filteredMedicareCriteria = $filter('orderBy')(filteredMedicareCriteria, function (item) {
-            return parseFloat(item.from)
-        }, true);
-        var medicareCriterium = filteredMedicareCriteria.length > 0 ? filteredMedicareCriteria[0] : null;
-        if (medicareCriterium) {
-            paystub.employeeMedicare = medicareCriterium.employee / $scope.generalSetup.application[$scope.weekEndingKey].payDays;
-        } else {
-            paystub.employeeMedicare = 0;
+    calculateMedicare: function($filter, medicareCriteria, employee, paystub, $scope) {
+        paystub.employeeMedicare = 0;
+        if (employee && employee.processMedicare) {
+            var filteredMedicareCriteria = $filter('filter')(medicareCriteria,
+                function (item) {
+                    return (parseFloat(item.from) < (paystub.subtotalPay * $scope.generalSetup.application[$scope.weekEndingKey].payDays));
+                });
+            filteredMedicareCriteria = $filter('orderBy')(filteredMedicareCriteria, function (item) {
+                return parseFloat(item.from)
+            }, true);
+            var medicareCriterium = filteredMedicareCriteria.length > 0 ? filteredMedicareCriteria[0] : null;
+            if (medicareCriterium) {
+                paystub.employeeMedicare = medicareCriterium.employee / $scope.generalSetup.application[$scope.weekEndingKey].payDays;
+            }
         }
     }
 };
@@ -256,6 +261,10 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         $scope.loadWithholdingData();
     });
 
+    $scope.$on(PayrollConstants.withholdingTypeUpdatedEvent, function(event, args) {
+        $scope.loadWithholdingTypes();
+    });
+
     $scope.$on(PayrollConstants.socialSecurityUpdatedEvent, function(event, args) {
         $scope.loadSocialSecurityData();
     });
@@ -264,6 +273,9 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         $scope.loadMedicareData();
     });
 
+    $scope.$on(PayrollConstants.storeUpdateEvent, function(event, args) {
+        $scope.loadStores();
+    });
     $scope.$on(PayrollConstants.generalSetupUpdatedEvent, function(event, args) {
         $scope.loadGeneralSetupData();
     });
@@ -650,8 +662,8 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
             paystub.totalPay = paystub.subtotalPay + paystub.sundayPay + paystub.sundayIncentive;
 
             PayrollUtils.calculateWithholding($filter, $scope.withholdingCriteria, employee, paystub);
-            PayrollUtils.calculateSocialSecurity($filter, $scope.socialSecurityCriteria, paystub, $scope);
-            PayrollUtils.calculateMedicare($filter, $scope.medicareCriteria, paystub, $scope);
+            PayrollUtils.calculateSocialSecurity($filter, $scope.socialSecurityCriteria, employee, paystub, $scope);
+            PayrollUtils.calculateMedicare($filter, $scope.medicareCriteria, employee, paystub, $scope);
 
             // Calculate Loan
             paystub.loan = 0;

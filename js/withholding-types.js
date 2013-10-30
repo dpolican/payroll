@@ -26,7 +26,7 @@ function WithholdingTypesRepository(DataService, $q, $rootScope) {
         return delay.promise;
     };
 
-    var saveAll = function(updatedRecords) {
+    var saveAll = function(updatedRecords, successHandler) {
         var recordsToSave = updatedRecords;
         var ids = [];
 
@@ -51,6 +51,10 @@ function WithholdingTypesRepository(DataService, $q, $rootScope) {
         });
 
         withholdingTypes = angular.copy(updatedRecords);
+
+        if (successHandler) {
+            successHandler();
+        }
     };
 
 
@@ -60,7 +64,7 @@ function WithholdingTypesRepository(DataService, $q, $rootScope) {
     }
 };
 
-function WithholdingTypesController($scope, dialog, WithholdingTypesRepository) {
+function WithholdingTypesController($scope, $rootScope, dialog, WithholdingTypesRepository) {
     $scope.records = [];
 
     $scope.gridOptions = {
@@ -112,7 +116,9 @@ function WithholdingTypesController($scope, dialog, WithholdingTypesRepository) 
     };
 
     $scope.save = function() {
-        WithholdingTypesRepository.saveAll($scope.records);
+        WithholdingTypesRepository.saveAll($scope.records, function() {
+            $rootScope.$broadcast(PayrollConstants.withholdingTypeUpdatedEvent);
+        });
         dialog.close();
     };
 
