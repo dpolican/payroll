@@ -33,7 +33,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-success" ng-click="import()">Import</button>
+            <button class="btn btn-success" ng-click="importData()">Import</button>
             <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
         </div>
     </div>
@@ -286,7 +286,7 @@
                 <div class="input-append">
                     <select class="span4" ng-model="record"
                             ng-options="(record.lastName + ', ' + record.firstName) for record in records" ng-disabled="employeeForm.$invalid"></select>
-                    <button class="btn" ng-click="delete()"tooltip-placement="bottom" tooltip="Delete employee record">Delete</button>
+                    <button class="btn" ng-click="deleteEmployee()"tooltip-placement="bottom" tooltip="Delete employee record">Delete</button>
                 </div>
                 <button class="btn" ng-click="add()" tooltip-placement="bottom" tooltip="Add employee record"><i class="icon-plus"></i> Add</button>
             </div>
@@ -589,13 +589,15 @@
                                 <div class="control-group">
                                     <label class="control-label" for="inputSickDays">Sick Days</label>
                                     <div class="controls">
-                                        <input type="number" step="0.5" class="span1" id="inputSickDays" ng-model="timesheet.sickDays" required/>
+                                        <input type="number" step="0.5" class="span1" id="inputSickDays" ng-model="timesheet.sickDays" required
+                                            ng-change="validateSickDays()"/>
                                     </div>
                                 </div>
                                 <div class="control-group">
                                     <label class="control-label" for="inputVacationDays">Vacation</label>
                                     <div class="controls">
-                                        <input type="number" step="0.5" class="span1" id="inputVacationDays" ng-model="timesheet.vacationDays" required/>
+                                        <input type="number" step="0.5" class="span1" id="inputVacationDays" ng-model="timesheet.vacationDays" required
+                                            ng-change="validateVacationDays()"/>
                                     </div>
                                 </div>
                             </div>

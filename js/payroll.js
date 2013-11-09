@@ -90,7 +90,7 @@ var PayrollUtils = {
             var lunchBreak = this.getElapsedMillis(day.amOut, day.pmIn);
             var amIn = this.parseTime(day.amIn);
             var pmOut = this.parseTime(day.pmOut);
-            return (amIn.getTime() <= schedule.in.getTime() && pmOut.getTime() >= schedule.out.getTime() && lunchBreak <= schedule.lunchBreak)
+            return (amIn.getTime() <= schedule['in'].getTime() && pmOut.getTime() >= schedule.out.getTime() && lunchBreak <= schedule.lunchBreak)
         }
         return false;
     },
@@ -300,7 +300,7 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
                 + timesheet.thu.hours + timesheet.fri.hours + timesheet.sat.hours;
 
             var schedule = {};
-            schedule.in = PayrollUtils.parseTime($scope.employee.amIn);
+            schedule['in'] = PayrollUtils.parseTime($scope.employee.amIn);
             schedule.out = PayrollUtils.parseTime($scope.employee.pmOut);
             schedule.lunchBreak = PayrollUtils.getElapsedMillis($scope.employee.amOut, $scope.employee.pmIn);
 
@@ -382,10 +382,21 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
             var key = PayrollUtils.getKeyFromDate(payday);
 
             angular.forEach(employees, function(employee) {
-                if (employee && employee[key] && employee[key].paystub) {
+                if (employee && employee[key]) {
                     angular.forEach(fields, function(field) {
-                        if (employee[key].paystub[field]) {
-                            runningTotal += employee[key].paystub[field];
+                        var partOne = 'paystub';
+                        var partTwo = field;
+
+                        if (field.indexOf('.') > -1) {
+                            var parts = field.split('.');
+                            if (parts.length > 1) {
+                                partOne = parts[0];
+                                partTwo = parts[1];
+                            }
+                        }
+
+                        if (employee[key][partOne] && employee[key][partOne][partTwo]) {
+                            runningTotal += employee[key][partOne][partTwo];
                         }
                     });
                 }
@@ -437,10 +448,21 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
             var key = PayrollUtils.getKeyFromDate(payday);
 
             angular.forEach(employees, function(employee) {
-                if (employee && employee[key] && employee[key].paystub) {
+                if (employee && employee[key]) {
                     angular.forEach(fields, function(field) {
-                        if (employee[key].paystub[field]) {
-                            runningTotal += employee[key].paystub[field];
+                        var partOne = 'paystub';
+                        var partTwo = field;
+
+                        if (field.indexOf('.') > -1) {
+                            var parts = field.split('.');
+                            if (parts.length > 1) {
+                                partOne = parts[0];
+                                partTwo = parts[1];
+                            }
+                        }
+
+                        if (employee[key][partOne] && employee[key][partOne][partTwo]) {
+                            runningTotal += employee[key][partOne][partTwo];
                         }
                     });
                 }
@@ -550,6 +572,25 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
 // End startup methods
 
 // Begin main page functions
+    $scope.validateSickDays = function() {
+        if ($scope.timesheet.sickDays && $scope.timesheet.sickDays > 0) {
+            var usedSickDays = $scope.calculateYearlyTotal($scope.employee, $scope.weekEnding, "timesheet.sickDays");
+            if (usedSickDays > $scope.employee.sickDays) {
+                var remainingSickDays = $scope.employee.sickDays - (usedSickDays - $scope.timesheet.sickDays);
+                $scope.timesheet.sickDays = (remainingSickDays > 0) ? remainingSickDays : 0;
+            }
+        }
+    };
+    $scope.validateVacationDays = function() {
+        if ($scope.timesheet.vacationDays && $scope.timesheet.vacationDays > 0) {
+            var usedVacationDays = $scope.calculateYearlyTotal($scope.employee, $scope.weekEnding, "timesheet.vacationDays");
+            if (usedVacationDays > $scope.employee.vacationDays) {
+                var remainingVacationDays = $scope.employee.vacationDays - (usedVacationDays - $scope.timesheet.vacationDays);
+                $scope.timesheet.vacationDays  = (remainingVacationDays > 0) ? remainingVacationDays : 0;
+            }
+        }
+    };
+
     $scope.updatePayweekInfo = function() {
         if ($scope.generalSetup) {
             if (!$scope.generalSetup.application) {
@@ -736,115 +777,99 @@ payrollModule.controller('PayrollController',function($scope, $filter, $dialog, 
         return ( mode === 'day' && ( date.getDay() < 6 ) );
     };
 
-    $scope.importDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        templateUrl: 'import.html',
-        controller: 'ImportController'
-    };
-
     $scope.showImportDialog = function() {
-        var d = $dialog.dialog($scope.importDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            templateUrl: 'import.html',
+            controller: 'ImportController'
+        });
         d.open();
     }
 
-    $scope.generalSetupDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        templateUrl: 'general-setup.html',
-        controller: 'GeneralSetupController'
-    };
-
     $scope.showGeneralSetup = function() {
         GeneralSetupRepository.saveData($scope.generalSetup);
-        var d = $dialog.dialog($scope.generalSetupDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            templateUrl: 'general-setup.html',
+            controller: 'GeneralSetupController'
+        });
         d.open();
-    };
-
-    $scope.socialSecurityDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        dialogClass: 'modal ss-dialog',
-        templateUrl: 'social-security.html',
-        controller: 'SocialSecurityController'
     };
 
     $scope.showSocialSecurity = function() {
-        var d = $dialog.dialog($scope.socialSecurityDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            dialogClass: 'modal ss-dialog',
+            templateUrl: 'social-security.html',
+            controller: 'SocialSecurityController'
+        });
         d.open();
-    };
-
-    $scope.withholdingTypesDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        dialogClass: 'modal wht-dialog',
-        templateUrl: 'withholding-types.html',
-        controller: 'WithholdingTypesController'
     };
 
     $scope.showWithholdingTypes = function() {
-        var d = $dialog.dialog($scope.withholdingTypesDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            dialogClass: 'modal wht-dialog',
+            templateUrl: 'withholding-types.html',
+            controller: 'WithholdingTypesController'
+        });
         d.open();
-    };
-
-    $scope.medicareDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        dialogClass: 'modal medicare-dialog',
-        templateUrl: 'medicare.html',
-        controller: 'MedicareController'
     };
 
     $scope.showMedicare = function() {
-        var d = $dialog.dialog($scope.medicareDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            dialogClass: 'modal medicare-dialog',
+            templateUrl: 'medicare.html',
+            controller: 'MedicareController'
+        });
         d.open();
-    };
-
-    $scope.withholdingDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        dialogClass: 'modal withholding-dialog',
-        templateUrl: 'withholding.html',
-        controller: 'WithholdingController'
     };
 
     $scope.showWithholding = function() {
-        var d = $dialog.dialog($scope.withholdingDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+                keyboard: false,
+                backdropClick: false,
+                dialogClass: 'modal withholding-dialog',
+                templateUrl: 'withholding.html',
+                controller: 'WithholdingController'
+        });
         d.open();
-    };
-
-    $scope.employeeDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        dialogClass: 'modal employee-dialog',
-        templateUrl: 'employee.html',
-        controller: 'EmployeeController'
     };
 
     $scope.showEmployee = function() {
         EmployeeRepository.saveAll($scope.employees);
-        var d = $dialog.dialog($scope.employeeDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            dialogClass: 'modal employee-dialog',
+            templateUrl: 'employee.html',
+            controller: 'EmployeeController'
+        });
         d.open();
     };
 
-    $scope.storeDialogOptions = {
-        backdrop: true,
-        keyboard: false,
-        backdropClick: false,
-        dialogClass: 'modal ss-dialog',
-        templateUrl: 'store.html',
-        controller: 'StoreController'
-    };
-
     $scope.showStores = function() {
-        var d = $dialog.dialog($scope.storeDialogOptions);
+        var d = $dialog.dialog({
+            backdrop: true,
+            keyboard: false,
+            backdropClick: false,
+            dialogClass: 'modal ss-dialog',
+            templateUrl: 'store.html',
+            controller: 'StoreController'
+        });
         d.open();
     };
 

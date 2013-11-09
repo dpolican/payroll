@@ -162,7 +162,7 @@ function EmployeeController($scope, $rootScope, dialog, EmployeeRepository, Stor
         $scope.record = newrecord;
     };
 
-    $scope.delete = function() {
+    $scope.deleteEmployee = function() {
         var index = $scope.records.indexOf($scope.record);
         if (index > -1) {
             $scope.records.splice(index, 1);

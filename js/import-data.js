@@ -4,7 +4,7 @@
 function ImportController($scope, $rootScope, dialog) {
     $scope.file;
 
-    $scope.import = function () {
+    $scope.importData = function () {
         var reader = new FileReader();
         reader.onloadend = function(e) {
             $rootScope.$broadcast(PayrollConstants.importEvent, JSON.parse(this.result));
