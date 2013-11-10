@@ -1,5 +1,5 @@
 /**
- * Created by ewkoenw on 10/6/13.
+ * Created by Domingo Polican on 10/6/13.
  */
 function EmployeeRepository(DataService, $q, $rootScope) {
 

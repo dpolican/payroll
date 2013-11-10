@@ -1,5 +1,5 @@
 /**
- * Created by ewkoenw on 9/30/13.
+ * Created by Domingo Polican on 9/30/13.
  */
 function MedicareRepository(DataService, $q, $rootScope) {
     var medicares;

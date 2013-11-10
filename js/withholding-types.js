@@ -1,5 +1,5 @@
 /**
- * Created by ewkoenw on 9/29/13.
+ * Created by Domingo Polican on 9/29/13.
  */
 function WithholdingTypesRepository(DataService, $q, $rootScope) {
     var withholdingTypes = [];

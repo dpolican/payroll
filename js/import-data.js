@@ -1,5 +1,5 @@
 /**
- * Created by ewkoenw on 10/26/13.
+ * Created by Domingo Polican on 10/26/13.
  */
 function ImportController($scope, $rootScope, dialog) {
     $scope.file;
